@@ -11,8 +11,12 @@ import { MongoConnection } from './infrastructure/database/MongoConnection';
 import { UserService } from './application/services/UserService';
 import { UserStoryService } from './application/services/UserStoryService';
 import { UserStoryController } from './application/controllers/UserStoryController';
+import { VoteService } from './application/services/VoteService';
+import { VoteController } from './application/controllers/VoteController';
 import { InMemorySessionRepository } from './infrastructure/repositories/InMemorySessionRepository';
+import { InMemoryVoteRepository } from './infrastructure/repositories/InMemoryVoteRepository';
 import { createUserStoryRoutes } from './application/routes/userStoryRoutes';
+import { createVoteRoutes } from './application/routes/voteRoutes';
 import { SessionService } from './application/services/SessionService';
 import { SessionController } from './application/controllers/SessionController';
 import { Router } from 'express';
@@ -33,8 +37,9 @@ const io = new Server(server, {
 // Initialize services
 const userService = new UserService();
 
-// Create shared session repository instance
+// Create shared repository instances
 const sessionRepository = new InMemorySessionRepository();
+const voteRepository = new InMemoryVoteRepository();
 
 // Initialize session service and routes (using shared repository)
 const sessionService = new SessionService(sessionRepository);
@@ -43,6 +48,10 @@ const sessionController = new SessionController(sessionService);
 // Initialize user story service and routes (using same repository)
 const userStoryService = new UserStoryService(sessionRepository);
 const userStoryController = new UserStoryController(userStoryService);
+
+// Initialize vote service and routes
+const voteService = new VoteService(voteRepository, sessionRepository);
+const voteController = new VoteController(voteService);
 
 // Create routes
 const sessionRoutes = Router();
@@ -84,9 +93,12 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+const voteRoutes = createVoteRoutes(voteController);
+
 // API Routes
 app.use('/api', sessionRoutes);
 app.use('/api', userStoryRoutes);
+app.use('/api', voteRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -304,6 +316,31 @@ io.on('connection', (socket) => {
     // Broadcast to all users in the session that the story was revealed
     socket.to(data.sessionId).emit('story-revealed', {
       userStory: data.userStory
+    });
+  });
+
+  // Voting WebSocket events
+  socket.on('vote-submitted', (data: { sessionId: string; vote: any; userId: string }) => {
+    // Broadcast to all users in the session that a vote was submitted (without revealing the vote)
+    socket.to(data.sessionId).emit('vote-submitted', {
+      userId: data.userId,
+      userStoryId: data.vote.userStoryId,
+      hasVoted: true
+    });
+  });
+
+  socket.on('votes-revealed', (data: { sessionId: string; userStoryId: string; votes: any[] }) => {
+    // Broadcast to all users in the session that votes were revealed
+    socket.to(data.sessionId).emit('votes-revealed', {
+      userStoryId: data.userStoryId,
+      votes: data.votes
+    });
+  });
+
+  socket.on('votes-cleared', (data: { sessionId: string; userStoryId: string }) => {
+    // Broadcast to all users in the session that votes were cleared
+    socket.to(data.sessionId).emit('votes-cleared', {
+      userStoryId: data.userStoryId
     });
   });
 });
