@@ -326,3 +326,20 @@
 .vote-card:last-child {
   animation: newVote 0.3s ease-out;
 }
+
+/* Voting message styles */
+.voting-message {
+  text-align: center;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.voting-message p {
+  margin: 0;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.9rem;
+}

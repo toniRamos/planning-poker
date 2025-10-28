@@ -207,6 +207,7 @@ const SessionView: React.FC = () => {
                   currentStory={session.currentStoryId ? 
                     session.userStories.find(story => story.id === session.currentStoryId) || null : null
                   }
+                  isCreator={currentUser.name === session.createdBy}
                   socket={socket}
                   onRevealVotes={refreshSession}
                 />

@@ -27,6 +27,7 @@ interface VotingPanelProps {
   sessionId: string;
   currentUser: { id: string; name: string; isSpectator: boolean } | null;
   currentStory: UserStory | null;
+  isCreator: boolean;
   socket?: any;
   onRevealVotes?: () => void;
 }
@@ -37,6 +38,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   sessionId,
   currentUser,
   currentStory,
+  isCreator,
   socket,
   onRevealVotes
 }) => {
@@ -281,12 +283,18 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       {votes.length > 0 && (
         <div className="voting-actions">
           {!votesRevealed ? (
-            <button
-              className="btn btn-primary reveal-btn"
-              onClick={revealVotes}
-            >
-              🔍 Reveal Votes
-            </button>
+            isCreator ? (
+              <button
+                className="btn btn-primary reveal-btn"
+                onClick={revealVotes}
+              >
+                🔍 Reveal Votes
+              </button>
+            ) : (
+              <div className="voting-message">
+                <p>Esperando a que el creador revele los votos...</p>
+              </div>
+            )
           ) : (
             <div className="revealed-actions">
               <div className="vote-results">
@@ -307,12 +315,18 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
                 </div>
               </div>
               
-              <button
-                className="btn btn-secondary clear-btn"
-                onClick={clearVotes}
-              >
-                🗑️ New Vote
-              </button>
+              {isCreator ? (
+                <button
+                  className="btn btn-secondary clear-btn"
+                  onClick={clearVotes}
+                >
+                  🗑️ New Vote
+                </button>
+              ) : (
+                <div className="voting-message">
+                  <p>Solo el creador puede iniciar una nueva votación</p>
+                </div>
+              )}
             </div>
           )}
         </div>
