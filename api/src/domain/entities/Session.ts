@@ -14,6 +14,7 @@ export interface Session {
   name: string;
   description?: string;
   createdBy: string;
+  creatorName: string; // Store the creator's name for direct access
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
@@ -34,6 +35,7 @@ export interface CreateSessionRequest {
   name: string;
   description?: string;
   createdBy: string;
+  creatorName: string;
   maxUsers?: number;
   settings?: Partial<SessionSettings>;
 }

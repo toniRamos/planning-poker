@@ -41,11 +41,11 @@ export class SessionController {
    */
   createSession = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, description, createdBy, maxUsers, settings } = req.body;
+      const { name, description, createdBy, creatorName, maxUsers, settings } = req.body;
 
-      if (!name || !createdBy) {
+      if (!name || !createdBy || !creatorName) {
         res.status(400).json({
-          error: 'Name and createdBy are required fields'
+          error: 'Name, createdBy, and creatorName are required fields'
         });
         return;
       }
@@ -54,6 +54,7 @@ export class SessionController {
         name,
         description,
         createdBy,
+        creatorName,
         maxUsers,
         settings
       };

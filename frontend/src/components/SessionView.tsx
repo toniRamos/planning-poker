@@ -4,6 +4,7 @@ import { Header, JoinForm, SessionContainer } from './';
 import { UserStoryManager } from '../modules/shared/components/UserStoryManager';
 import { VotingPanel } from '../modules/shared/components/VotingPanel';
 import { useSocket } from '../modules/shared/hooks';
+import { UserRole } from '../types/User';
 import './SessionView.css';
 
 interface UserStory {
@@ -39,6 +40,11 @@ const SessionView: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
+  
+  // Check if user is creator (from URL params)
+  const urlParams = new URLSearchParams(window.location.search);
+  const creatorName = urlParams.get('creator');
 
   const {
     socket,
@@ -91,8 +97,50 @@ const SessionView: React.FC = () => {
     }
   };
 
-  const handleJoinSession = (userName: string, isSpectator: boolean = false) => {
-    joinWithName(userName, isSpectator);
+  const handleJoinSession = (userName: string, role: UserRole = UserRole.PLAYER) => {
+    joinWithName(userName, role);
+  };
+
+  // Auto-join creator when they access session directly
+  useEffect(() => {
+    if (creatorName && session && !currentUser && socket) {
+      // Creator joins directly with admin role
+      handleJoinSession(creatorName, UserRole.ADMIN);
+    }
+  }, [creatorName, session, currentUser, socket]);
+
+  // Function to handle sharing session URL
+  const handleShareSession = async () => {
+    try {
+      // Get the current URL without query parameters for a clean share link
+      const sessionUrl = `${window.location.origin}/session/${sessionId}`;
+      
+      // Try to use the modern Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(sessionUrl);
+      } else {
+        // Fallback for older browsers or non-HTTPS contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = sessionUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      
+      // Show notification
+      setShowCopyNotification(true);
+      setTimeout(() => setShowCopyNotification(false), 3000);
+      
+    } catch (err) {
+      console.error('Failed to copy session URL:', err);
+      // Fallback: at least show the URL in an alert
+      alert(`Session URL: ${window.location.origin}/session/${sessionId}`);
+    }
   };
 
   if (loading) {
@@ -129,6 +177,13 @@ const SessionView: React.FC = () => {
 
   return (
     <div className="session-view">
+      {/* Copy notification */}
+      {showCopyNotification && (
+        <div className="copy-notification">
+          ✅ Session URL copied to clipboard!
+        </div>
+      )}
+      
       <Header 
         isConnected={isConnected}
         totalUsers={totalUsers}
@@ -156,10 +211,8 @@ const SessionView: React.FC = () => {
             
             <JoinForm 
               isConnected={isConnected}
-              onJoin={(name) => handleJoinSession(name, false)}
+              onJoin={(name, role) => handleJoinSession(name, role)}
               allowSpectators={session.settings.allowSpectators}
-              onJoinAsSpectator={session.settings.allowSpectators ? 
-                (name) => handleJoinSession(name, true) : undefined}
             />
           </div>
         ) : (
@@ -174,10 +227,8 @@ const SessionView: React.FC = () => {
               <div className="session-actions">
                 <button 
                   className="share-button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    // TODO: Show toast notification
-                  }}
+                  onClick={handleShareSession}
+                  title="Copy session URL to clipboard"
                 >
                   🔗 Share Session
                 </button>
@@ -191,7 +242,7 @@ const SessionView: React.FC = () => {
               <>
                 <UserStoryManager
                   sessionId={sessionId!}
-                  isCreator={currentUser.name === session.createdBy}
+                  isCreator={currentUser.role === UserRole.ADMIN}
                   currentStoryId={session.currentStoryId}
                   onStoryChange={refreshSession}
                   socket={socket}
@@ -202,12 +253,12 @@ const SessionView: React.FC = () => {
                   currentUser={{
                     id: currentUser.socketId,
                     name: currentUser.name,
-                    isSpectator: false // We'll need to get this from user data
+                    isSpectator: currentUser.role === UserRole.VIEWER
                   }}
                   currentStory={session.currentStoryId ? 
                     session.userStories.find(story => story.id === session.currentStoryId) || null : null
                   }
-                  isCreator={currentUser.name === session.createdBy}
+                  isCreator={currentUser.role === UserRole.ADMIN}
                   socket={socket}
                   onRevealVotes={refreshSession}
                 />

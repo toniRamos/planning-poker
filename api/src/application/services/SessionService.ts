@@ -23,6 +23,7 @@ export class SessionService {
       name: request.name,
       description: request.description,
       createdBy: request.createdBy,
+      creatorName: request.creatorName,
       createdAt: now,
       updatedAt: now,
       isActive: true,

@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+import { UserRole } from '../../../types/User';
+
 export interface ConnectedUser {
   id: string;
   name: string;
   socketId: string;
   connectedAt: Date;
+  role?: UserRole;
+  isSpectator?: boolean;
 }
 
 export interface SocketEvents {
@@ -24,7 +28,7 @@ export interface UseSocketReturn {
   users: ConnectedUser[];
   totalUsers: number;
   currentUser: ConnectedUser | null;
-  joinWithName: (name: string, isSpectator?: boolean) => void;
+  joinWithName: (name: string, role?: UserRole) => void;
   updateName: (newName: string) => void;
   messages: Array<{ id: string; message: string; timestamp: Date; type: 'info' | 'error' | 'success' }>;
 }
@@ -122,14 +126,14 @@ export const useSocket = (sessionId?: string): UseSocketReturn => {
     };
   }, [addMessage, sessionId]);
 
-  const joinWithName = useCallback((name: string, isSpectator: boolean = false) => {
-    console.log('Attempting to join with name:', name.trim());
+  const joinWithName = useCallback((name: string, role: UserRole = UserRole.PLAYER) => {
+    console.log('Attempting to join with name:', name.trim(), 'role:', role);
     console.log('Socket connected:', !!socketRef.current?.connected);
     if (socketRef.current && name.trim() && sessionId) {
       const joinData = {
         userName: name.trim(),
         sessionId: sessionId,
-        isSpectator: isSpectator
+        role: role
       };
       socketRef.current.emit('user-join', joinData);
       console.log('Emitted user-join event with session:', joinData);

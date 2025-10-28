@@ -1,26 +1,21 @@
 import React, { useState } from 'react';
+import { UserRole } from '../types/User';
+import './JoinForm.css';
 
 interface JoinFormProps {
   isConnected: boolean;
-  onJoin: (name: string) => void;
+  onJoin: (name: string, role: UserRole) => void;
   allowSpectators?: boolean;
-  onJoinAsSpectator?: (name: string) => void;
 }
 
-const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectators, onJoinAsSpectator }) => {
+const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectators }) => {
   const [nameInput, setNameInput] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.PLAYER);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (nameInput.trim()) {
-      onJoin(nameInput.trim());
-      setNameInput('');
-    }
-  };
-
-  const handleSpectatorJoin = () => {
-    if (nameInput.trim() && onJoinAsSpectator) {
-      onJoinAsSpectator(nameInput.trim());
+      onJoin(nameInput.trim(), selectedRole);
       setNameInput('');
     }
   };
@@ -41,20 +36,43 @@ const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectator
             maxLength={30}
           />
         </div>
+
+        {allowSpectators && (
+          <div className="role-selection">
+            <label>Choose your role:</label>
+            <div className="role-options">
+              <label className="role-option">
+                <input
+                  type="radio"
+                  name="role"
+                  value={UserRole.PLAYER}
+                  checked={selectedRole === UserRole.PLAYER}
+                  onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                />
+                <span className="role-label">
+                  🎯 <strong>Player</strong> - Can participate in voting
+                </span>
+              </label>
+              <label className="role-option">
+                <input
+                  type="radio"
+                  name="role"
+                  value={UserRole.VIEWER}
+                  checked={selectedRole === UserRole.VIEWER}
+                  onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                />
+                <span className="role-label">
+                  👁️ <strong>Viewer</strong> - Can observe without voting
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+
         <div className="join-buttons">
           <button type="submit" disabled={!isConnected || !nameInput.trim()}>
-            🎯 Join as Player
+            {selectedRole === UserRole.PLAYER ? '🎯 Join as Player' : '👁️ Join as Viewer'}
           </button>
-          {allowSpectators && onJoinAsSpectator && (
-            <button 
-              type="button" 
-              onClick={handleSpectatorJoin}
-              disabled={!isConnected || !nameInput.trim()}
-              className="spectator-button"
-            >
-              👁️ Join as Spectator
-            </button>
-          )}
         </div>
       </form>
     </div>

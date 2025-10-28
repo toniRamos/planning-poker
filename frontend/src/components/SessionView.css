@@ -186,19 +186,30 @@
 }
 
 .share-button {
-  padding: 10px 20px;
-  background: #28a745;
+  padding: 12px 24px;
+  background: #007bff;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .share-button:hover {
-  background: #218838;
+  background: #0056b3;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.share-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .session-id {
@@ -309,5 +320,55 @@
   
   .header-title {
     text-align: left;
+  }
+}
+
+/* Copy notification styles */
+.copy-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #28a745;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  font-weight: 600;
+  animation: slideInNotification 0.3s ease-out, slideOutNotification 0.3s ease-in 2.7s forwards;
+}
+
+@keyframes slideInNotification {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutNotification {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Responsive notification */
+@media (max-width: 768px) {
+  .copy-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    right: 10px;
+    text-align: center;
+    font-size: 14px;
+    padding: 10px 16px;
   }
 }

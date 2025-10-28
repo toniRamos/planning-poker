@@ -6,6 +6,7 @@ interface SessionData {
   name: string;
   description: string;
   createdBy: string;
+  creatorName: string;
   maxUsers: number;
   allowSpectators: boolean;
 }
@@ -16,6 +17,7 @@ const CreateSession: React.FC = () => {
     name: '',
     description: '',
     createdBy: '',
+    creatorName: '',
     maxUsers: 10,
     allowSpectators: true
   });
@@ -36,34 +38,49 @@ const CreateSession: React.FC = () => {
     setError(null);
     setIsLoading(true);
 
+    console.log('Form data:', formData);
+    console.log('Submitting to:', '/api/sessions');
+
+    const requestData = {
+      name: formData.name,
+      description: formData.description,
+      createdBy: `creator-${Date.now()}`, // Unique ID for creator
+      creatorName: formData.creatorName,
+      maxUsers: formData.maxUsers,
+      settings: {
+        allowSpectators: formData.allowSpectators,
+        autoRevealCards: false,
+        cardSet: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕']
+      }
+    };
+
+    console.log('Request payload:', requestData);
+
     try {
       const response = await fetch('/api/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          createdBy: formData.createdBy,
-          maxUsers: formData.maxUsers,
-          settings: {
-            allowSpectators: formData.allowSpectators,
-            autoRevealCards: false,
-            cardSet: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕']
-          }
-        })
+        body: JSON.stringify(requestData)
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('Error response:', errorData);
         throw new Error(errorData.error || 'Failed to create session');
       }
 
       const result = await response.json();
-      navigate(`/session/${result.data.id}`);
+      console.log('Success response:', result);
+      // Creator goes directly to session with admin role
+      navigate(`/session/${result.data.id}?creator=${encodeURIComponent(formData.creatorName)}`);
       
     } catch (err) {
+      console.error('Request error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -105,14 +122,14 @@ const CreateSession: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="createdBy">Your Name *</label>
+            <label htmlFor="creatorName">Your Name *</label>
             <input
-              id="createdBy"
-              name="createdBy"
+              id="creatorName"
+              name="creatorName"
               type="text"
-              value={formData.createdBy}
+              value={formData.creatorName}
               onChange={handleInputChange}
-              placeholder="Enter your name"
+              placeholder="Enter your name as session creator"
               required
               maxLength={50}
             />
@@ -154,20 +171,47 @@ const CreateSession: React.FC = () => {
           <button 
             type="submit" 
             className="create-button"
-            disabled={isLoading || !formData.name.trim() || !formData.createdBy.trim()}
+            disabled={isLoading || !formData.name.trim() || !formData.creatorName.trim()}
           >
             {isLoading ? '🔄 Creating...' : '🚀 Create Session'}
           </button>
         </form>
 
         <div className="info-section">
-          <h3>What happens next?</h3>
+          <h3>💡 What happens next?</h3>
           <ul>
-            <li>📝 Your session will be created with a unique ID</li>
-            <li>🔗 Share the session link with your team</li>
-            <li>👥 Team members can join and start estimating</li>
-            <li>⏱️ Sessions remain active until manually closed</li>
+            <li>🎯 You'll enter directly as the <strong>Admin</strong> with full control</li>
+            <li>🔗 Share the session URL with your team members</li>
+            <li>� Team members choose to join as <strong>Players</strong> (can vote) or <strong>Viewers</strong> (observe only)</li>
+            <li>📊 As Admin, you manage user stories and control when votes are revealed</li>
           </ul>
+          
+          <div className="role-info">
+            <h4>🎭 Roles Explained:</h4>
+            <div className="role-cards">
+              <div className="role-card admin">
+                <span className="role-icon">👑</span>
+                <div className="role-content">
+                  <h5>Admin</h5>
+                  <p>Full control over session, stories, and voting reveals</p>
+                </div>
+              </div>
+              <div className="role-card player">
+                <span className="role-icon">🎯</span>
+                <div className="role-content">
+                  <h5>Player</h5>
+                  <p>Participates in voting and estimation discussions</p>
+                </div>
+              </div>
+              <div className="role-card viewer">
+                <span className="role-icon">👁️</span>
+                <div className="role-content">
+                  <h5>Viewer</h5>
+                  <p>Observes the session without voting privileges</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

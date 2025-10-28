@@ -18,6 +18,7 @@ import { InMemoryVoteRepository } from './infrastructure/repositories/InMemoryVo
 import { createUserStoryRoutes } from './application/routes/userStoryRoutes';
 import { createVoteRoutes } from './application/routes/voteRoutes';
 import { SessionService } from './application/services/SessionService';
+import { UserRole } from './domain/entities/User';
 import { SessionController } from './application/controllers/SessionController';
 import { Router } from 'express';
 
@@ -104,9 +105,9 @@ app.use('/api', voteRoutes);
 io.on('connection', (socket) => {
   console.log(`🔌 User connected: ${socket.id}`);
 
-  // Handle user joining with their name and session
-  socket.on('user-join', (data: { userName: string; sessionId: string; isSpectator?: boolean }) => {
-    const { userName, sessionId, isSpectator = false } = data;
+    // Handle user joining with their name and session
+  socket.on('user-join', (data: { userName: string; sessionId: string; role?: string }) => {
+    const { userName, sessionId, role = 'player' } = data;
     
     if (!userName || userName.trim() === '') {
       socket.emit('error', { message: 'Name is required' });
@@ -131,7 +132,9 @@ io.on('connection', (socket) => {
       }
 
       try {
-        const user = userService.addUser(socket.id, userName, sessionId, isSpectator);
+        const userRole = role === 'admin' ? UserRole.ADMIN : 
+                        role === 'viewer' ? UserRole.VIEWER : UserRole.PLAYER;
+        const user = userService.addUser(socket.id, userName, sessionId, userRole);
         console.log(`👤 User joined session ${sessionId}: ${user.name} (${socket.id})`);
         
         // Join the socket to the session room

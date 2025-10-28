@@ -1,3 +1,5 @@
+import { UserRole, User } from '../../domain/entities/User';
+
 export interface ConnectedUser {
   id: string;
   name: string;
@@ -5,20 +7,22 @@ export interface ConnectedUser {
   sessionId: string;
   connectedAt: Date;
   isSpectator?: boolean;
+  role?: UserRole;
 }
 
 export class UserService {
   private connectedUsers: Map<string, ConnectedUser> = new Map();
   private sessionUsers: Map<string, Set<string>> = new Map(); // sessionId -> Set of socketIds
 
-  addUser(socketId: string, name: string, sessionId: string, isSpectator: boolean = false): ConnectedUser {
+  addUser(socketId: string, name: string, sessionId: string, role: UserRole = UserRole.PLAYER): ConnectedUser {
     const user: ConnectedUser = {
       id: socketId,
       name: name.trim(),
       socketId,
       sessionId,
       connectedAt: new Date(),
-      isSpectator
+      isSpectator: role === UserRole.VIEWER,
+      role
     };
     
     this.connectedUsers.set(socketId, user);
@@ -93,11 +97,25 @@ export class UserService {
 
   switchUserMode(socketId: string): ConnectedUser | null {
     const user = this.connectedUsers.get(socketId);
-    if (user) {
-      user.isSpectator = !user.isSpectator;
+    if (user && user.role !== UserRole.ADMIN) { // Admin cannot switch roles
+      const newRole = user.role === UserRole.PLAYER ? UserRole.VIEWER : UserRole.PLAYER;
+      user.role = newRole;
+      user.isSpectator = newRole === UserRole.VIEWER;
       this.connectedUsers.set(socketId, user);
       return user;
     }
     return null;
+  }
+
+  getUsersByRole(sessionId: string, role: UserRole): ConnectedUser[] {
+    const sessionUserIds = this.sessionUsers.get(sessionId) || new Set();
+    return Array.from(sessionUserIds)
+      .map(socketId => this.connectedUsers.get(socketId))
+      .filter((user): user is ConnectedUser => user !== undefined && user.role === role);
+  }
+
+  getSessionAdmin(sessionId: string): ConnectedUser | null {
+    const admins = this.getUsersByRole(sessionId, UserRole.ADMIN);
+    return admins.length > 0 ? admins[0] : null;
   }
 }
