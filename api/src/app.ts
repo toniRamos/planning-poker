@@ -178,7 +178,10 @@ io.on('connection', (socket) => {
   });
 
   // Handle user name change
-  socket.on('update-name', (newName: string) => {
+  socket.on('update-name', (data: string | { sessionId: string; newName: string }) => {
+    // Support both old format (string) and new format (object)
+    const newName = typeof data === 'string' ? data : data.newName;
+    
     if (!newName || newName.trim() === '') {
       socket.emit('error', { message: 'Name is required' });
       return;
