@@ -116,8 +116,9 @@
 }
 
 .btn-sm {
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 6px 12px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .stories-list {
@@ -182,6 +183,32 @@
   flex: 1;
 }
 
+.story-title-link {
+  margin: 0;
+  font-size: 1rem;
+  color: #007bff;
+  flex: 1;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  word-break: break-all;
+}
+
+.story-title-link:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.story-title-link.scored {
+  text-decoration: line-through;
+  opacity: 0.7;
+  color: #28a745;
+}
+
+.story-title-link.scored:hover {
+  color: #218838;
+}
+
 .current-badge {
   background: #007bff;
   color: white;
@@ -242,10 +269,12 @@
 
 .story-actions-item {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-direction: row;
+  gap: 8px;
   margin-left: 15px;
   flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* Drag and drop styles */
@@ -278,7 +307,9 @@
     margin-left: 0;
     margin-top: 15px;
     flex-direction: row;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
   }
 
   .form-actions {
@@ -291,12 +322,6 @@
 }
 
 /* Scored story styles */
-.story-title.scored {
-  text-decoration: line-through;
-  opacity: 0.7;
-  color: #28a745;
-}
-
 .scored-badge {
   background: #28a745;
   color: white;

@@ -32,9 +32,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newStory, setNewStory] = useState({
-    title: '',
-    description: '',
-    acceptanceCriteria: ''
+    title: ''
   });
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
@@ -152,7 +150,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       if (response.ok) {
         const addedStory = await response.json();
         setUserStories([...userStories, addedStory]);
-        setNewStory({ title: '', description: '', acceptanceCriteria: '' });
+        setNewStory({ title: '' });
         setShowAddForm(false);
         
         // Emit WebSocket event to notify other users
@@ -380,31 +378,13 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       {showAddForm && (
         <div className="add-story-form">
           <div className="form-group">
-            <label>Título *</label>
+            <label>URL de la Historia *</label>
             <input
               type="text"
               value={newStory.title}
               onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
-              placeholder="Como usuario quiero..."
-              maxLength={200}
-            />
-          </div>
-          <div className="form-group">
-            <label>Descripción</label>
-            <textarea
-              value={newStory.description}
-              onChange={(e) => setNewStory({ ...newStory, description: e.target.value })}
-              placeholder="Descripción detallada de la funcionalidad"
-              rows={3}
-            />
-          </div>
-          <div className="form-group">
-            <label>Criterios de Aceptación</label>
-            <textarea
-              value={newStory.acceptanceCriteria}
-              onChange={(e) => setNewStory({ ...newStory, acceptanceCriteria: e.target.value })}
-              placeholder="- Criterio 1&#10;- Criterio 2&#10;- Criterio 3"
-              rows={4}
+              placeholder="https://jira.example.com/browse/PROJ-123"
+              maxLength={500}
             />
           </div>
           <div className="form-actions">
@@ -419,7 +399,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
               className="btn btn-secondary"
               onClick={() => {
                 setShowAddForm(false);
-                setNewStory({ title: '', description: '', acceptanceCriteria: '' });
+                setNewStory({ title: '' });
               }}
             >
               Cancelar
@@ -449,7 +429,14 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
               <div className="story-content">
                 <div className="story-header-item">
                   <span className="story-order">#{story.order + 1}</span>
-                  <h4 className={`story-title ${story.isScored ? 'scored' : ''}`}>{story.title}</h4>
+                  <a 
+                    href={story.title} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`story-title-link ${story.isScored ? 'scored' : ''}`}
+                  >
+                    {story.title}
+                  </a>
                   {currentStoryId === story.id && (
                     <span className="current-badge">Actual</span>
                   )}
@@ -457,17 +444,6 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     <span className="scored-badge">✅ Puntuada</span>
                   )}
                 </div>
-                
-                {story.description && (
-                  <p className="story-description">{story.description}</p>
-                )}
-                
-                {story.acceptanceCriteria && (
-                  <div className="acceptance-criteria">
-                    <strong>Criterios de Aceptación:</strong>
-                    <pre>{story.acceptanceCriteria}</pre>
-                  </div>
-                )}
                 
                 {story.estimatedPoints && story.isRevealed && (
                   <div className="story-estimate">
