@@ -30,8 +30,9 @@ const SWAGGER_HOST_PORT = process.env.SWAGGER_HOST_PORT || PORT;
 // Initialize Socket.IO with CORS configuration
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: process.env.FRONTEND_URL || true, // Allow all origins in development
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -64,7 +65,13 @@ sessionRoutes.delete('/sessions/:id', sessionController.deleteSession.bind(sessi
 
 const userStoryRoutes = createUserStoryRoutes(userStoryController);
 
-app.use(cors());
+// Configure CORS for Express
+app.use(cors({
+  origin: process.env.FRONTEND_URL || true, // Allow all origins in development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 const swaggerOptions = {

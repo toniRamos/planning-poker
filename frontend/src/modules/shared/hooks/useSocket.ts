@@ -34,8 +34,19 @@ export interface UseSocketReturn {
 }
 
 // For WebSocket connections, we need to use the correct URL based on environment
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || 
-  `${window.location.protocol}//${window.location.hostname}:3001`;
+// This automatically uses the same host as the browser but with port 3001
+const getServerUrl = () => {
+  if (process.env.REACT_APP_SERVER_URL) {
+    return process.env.REACT_APP_SERVER_URL;
+  }
+  
+  // Use the same protocol and hostname as the current page, but port 3001
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  return `${protocol}//${hostname}:3001`;
+};
+
+const SERVER_URL = getServerUrl();
 
 export const useSocket = (sessionId?: string): UseSocketReturn => {
   const socketRef = useRef<Socket | null>(null);
@@ -57,8 +68,17 @@ export const useSocket = (sessionId?: string): UseSocketReturn => {
 
   useEffect(() => {
     // Create socket connection
-    console.log('Connecting to server at:', SERVER_URL);
-    socketRef.current = io(SERVER_URL);
+    console.log('🔌 Attempting to connect to Socket.IO server...');
+    console.log('📍 SERVER_URL:', SERVER_URL);
+    console.log('🌐 window.location:', window.location.href);
+    console.log('🔧 Environment:', process.env.NODE_ENV);
+    
+    socketRef.current = io(SERVER_URL, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true
+    });
 
     const socket = socketRef.current;
 

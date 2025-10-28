@@ -12,6 +12,10 @@ services:
       - PORT=3000
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+      - DANGEROUSLY_DISABLE_HOST_CHECK=true
+      # Opcional: especifica tu dominio/IP para mayor seguridad
+      # - WDS_SOCKET_HOST=tu-dominio.com
+      # Socket.IO URL se genera automáticamente usando el mismo host del navegador
     command: sh -c "npm install && npm start"
     depends_on:
       - node
