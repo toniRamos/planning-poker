@@ -94,10 +94,11 @@
 }
 
 .session-main {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  padding-right: 300px; /* Space for sidebar */
   min-height: calc(100vh - 70px);
+  transition: padding-right 0.3s ease;
 }
 
 .join-section {
@@ -377,16 +378,15 @@
   animation: slideInNotification 0.3s ease-out, slideOutNotification 0.3s ease-in 3.7s forwards;
 }
 
-/* User Sidebar Styles */
+/* User Sidebar Styles - Always visible on right side */
 .user-sidebar {
   position: fixed;
   top: 70px;
-  left: -300px;
-  width: 300px;
+  right: 0;
+  width: 280px;
   height: calc(100vh - 70px);
   background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -2px 0 20px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   overflow-y: auto;
   overflow-x: hidden;
@@ -432,16 +432,7 @@
   display: none;
 }
 
-.main-content {
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: calc(100vh - 70px);
-}
-
-.main-content.sidebar-open {
-  margin-left: 300px;
-}
-
-/* Header updates for users button */
+/* Header updates for users button - hide it since sidebar is always visible */
 .header-left {
   display: flex;
   align-items: center;
@@ -449,20 +440,7 @@
 }
 
 .users-menu-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  height: 44px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: none; /* Hide the toggle button since sidebar is always visible */
 }
 
 .users-menu-btn:hover {
@@ -476,18 +454,49 @@
 }
 
 /* Responsive sidebar */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .user-sidebar {
-    width: 280px;
-    left: -280px;
+    width: 260px;
   }
   
-  .main-content.sidebar-open {
-    margin-left: 0;
+  .session-main {
+    padding-right: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-sidebar {
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .user-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .session-main {
+    padding-right: 20px;
   }
   
   .sidebar-overlay {
     display: block;
+  }
+  
+  .users-menu-btn {
+    display: flex !important; /* Show toggle button on mobile */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   }
   
   .copy-notification {

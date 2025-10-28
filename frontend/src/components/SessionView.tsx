@@ -289,23 +289,21 @@ const SessionView: React.FC = () => {
                   socket={socket}
                 />
                 
-                {/* Main Content Area */}
-                <div className={`main-content ${showUsersPanel ? 'sidebar-open' : ''}`}>
-                  <VotingPanel
-                    sessionId={sessionId!}
-                    currentUser={{
-                      id: currentUser.socketId,
-                      name: currentUser.name,
-                      isSpectator: currentUser.role === UserRole.VIEWER
-                    }}
-                    currentStory={session.currentStoryId ? 
-                      session.userStories.find(story => story.id === session.currentStoryId) || null : null
-                    }
-                    isCreator={currentUser.role === UserRole.ADMIN}
-                    socket={socket}
-                    onRevealVotes={refreshSession}
-                  />
-                </div>
+                {/* Voting Panel */}
+                <VotingPanel
+                  sessionId={sessionId!}
+                  currentUser={{
+                    id: currentUser.socketId,
+                    name: currentUser.name,
+                    isSpectator: currentUser.role === UserRole.VIEWER
+                  }}
+                  currentStory={session.currentStoryId ? 
+                    session.userStories.find(story => story.id === session.currentStoryId) || null : null
+                  }
+                  isCreator={currentUser.role === UserRole.ADMIN}
+                  socket={socket}
+                  onRevealVotes={refreshSession}
+                />
                 
                 {/* User Sidebar */}
                 <div className={`user-sidebar ${showUsersPanel ? 'open' : ''}`}>
