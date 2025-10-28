@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Header, JoinForm, SessionContainer } from './';
+import { Header, JoinForm } from './';
+import UsersList from './UsersList';
+import UserInfo from './UserInfo';
 import { UserStoryManager } from '../modules/shared/components/UserStoryManager';
 import { VotingPanel } from '../modules/shared/components/VotingPanel';
 import { useSocket } from '../modules/shared/hooks';
@@ -42,6 +44,7 @@ const SessionView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [roleChangeNotification, setRoleChangeNotification] = useState<string | null>(null);
+  const [showUsersPanel, setShowUsersPanel] = useState(false);
   
   // Check if user is creator (from URL params)
   const urlParams = new URLSearchParams(window.location.search);
@@ -224,6 +227,8 @@ const SessionView: React.FC = () => {
         isConnected={isConnected}
         totalUsers={totalUsers}
         sessionName={session.name}
+        onToggleUsersPanel={() => setShowUsersPanel(!showUsersPanel)}
+        showUsersPanel={showUsersPanel}
       />
       
       <main className="session-main">
@@ -284,30 +289,48 @@ const SessionView: React.FC = () => {
                   socket={socket}
                 />
                 
-                <VotingPanel
-                  sessionId={sessionId!}
-                  currentUser={{
-                    id: currentUser.socketId,
-                    name: currentUser.name,
-                    isSpectator: currentUser.role === UserRole.VIEWER
-                  }}
-                  currentStory={session.currentStoryId ? 
-                    session.userStories.find(story => story.id === session.currentStoryId) || null : null
-                  }
-                  isCreator={currentUser.role === UserRole.ADMIN}
-                  socket={socket}
-                  onRevealVotes={refreshSession}
-                />
+                {/* Main Content Area */}
+                <div className={`main-content ${showUsersPanel ? 'sidebar-open' : ''}`}>
+                  <VotingPanel
+                    sessionId={sessionId!}
+                    currentUser={{
+                      id: currentUser.socketId,
+                      name: currentUser.name,
+                      isSpectator: currentUser.role === UserRole.VIEWER
+                    }}
+                    currentStory={session.currentStoryId ? 
+                      session.userStories.find(story => story.id === session.currentStoryId) || null : null
+                    }
+                    isCreator={currentUser.role === UserRole.ADMIN}
+                    socket={socket}
+                    onRevealVotes={refreshSession}
+                  />
+                </div>
                 
-                <SessionContainer
-                  currentUser={currentUser}
-                  users={users}
-                  totalUsers={totalUsers}
-                  messages={messages}
-                  onUpdateName={updateName}
-                  sessionId={sessionId!}
-                  socket={socket}
-                />
+                {/* User Sidebar */}
+                <div className={`user-sidebar ${showUsersPanel ? 'open' : ''}`}>
+                  <div className="sidebar-content">
+                    <UserInfo 
+                      currentUser={currentUser} 
+                      onUpdateName={(newName) => {
+                        if (socket) {
+                          socket.emit('update-name', { sessionId, newName });
+                        }
+                      }}
+                    />
+                    <UsersList 
+                      users={users} 
+                      totalUsers={totalUsers}
+                      currentUserId={currentUser?.id || ''}
+                      currentUserRole={currentUser?.role}
+                      sessionId={sessionId!}
+                      socket={socket}
+                    />
+                  </div>
+                </div>
+                
+                {/* Overlay for mobile */}
+                {showUsersPanel && <div className="sidebar-overlay" onClick={() => setShowUsersPanel(false)} />}
               </>
             )}
           </>
