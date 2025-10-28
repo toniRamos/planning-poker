@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header, JoinForm, SessionContainer } from './';
 import { UserStoryManager } from '../modules/shared/components/UserStoryManager';
+import { VotingPanel } from '../modules/shared/components/VotingPanel';
 import { useSocket } from '../modules/shared/hooks';
 import './SessionView.css';
 
@@ -194,6 +195,20 @@ const SessionView: React.FC = () => {
                   currentStoryId={session.currentStoryId}
                   onStoryChange={refreshSession}
                   socket={socket}
+                />
+                
+                <VotingPanel
+                  sessionId={sessionId!}
+                  currentUser={{
+                    id: currentUser.socketId,
+                    name: currentUser.name,
+                    isSpectator: false // We'll need to get this from user data
+                  }}
+                  currentStory={session.currentStoryId ? 
+                    session.userStories.find(story => story.id === session.currentStoryId) || null : null
+                  }
+                  socket={socket}
+                  onRevealVotes={refreshSession}
                 />
                 
                 <SessionContainer
