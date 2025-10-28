@@ -411,47 +411,73 @@
 
 /* Users Section */
 .users-section {
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
+  background: white;
+  padding: 0;
+  border-radius: 0;
+  border: none;
 }
 
 .users-section h3 {
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
   color: #2c3e50;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 4px;
 }
 
 .users-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .user-card {
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #28a745;
-  transition: transform 0.2s;
+  padding: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: linear-gradient(180deg, #28a745 0%, #20c997 100%);
+  transition: width 0.2s ease;
 }
 
 .user-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #dee2e6;
+}
+
+.user-card:hover::before {
+  width: 5px;
 }
 
 .user-card.current-user {
-  background: #e8f5e8;
-  border-left-color: #007bff;
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  border-color: #2196f3;
+}
+
+.user-card.current-user::before {
+  background: linear-gradient(180deg, #2196f3 0%, #1976d2 100%);
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -459,66 +485,82 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 4px;
 }
 
 .user-role {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .role-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 3px 10px;
+  border-radius: 16px;
   color: white;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .role-controls {
-  margin: 8px 0;
+  margin: 6px 0 4px 0;
 }
 
 .role-selector {
   padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.85rem;
   background: white;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  width: 100%;
+  font-weight: 500;
 }
 
 .role-selector:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.role-selector:hover {
+  border-color: #adb5bd;
 }
 
 .role-selector:disabled {
   background: #f8f9fa;
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .user-name {
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  color: #2c3e50;
 }
 
 .you-badge {
-  background: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
 
 .connection-time {
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: 0.7rem;
+  color: #868e96;
+  font-weight: 500;
 }
 
 /* Messages Section */

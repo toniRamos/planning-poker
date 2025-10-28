@@ -381,14 +381,33 @@
 .user-sidebar {
   position: fixed;
   top: 70px;
-  left: -320px;
-  width: 320px;
+  left: -300px;
+  width: 300px;
   height: calc(100vh - 70px);
-  background: white;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: left 0.3s ease-in-out;
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar for sidebar */
+.user-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.user-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.user-sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.user-sidebar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
 }
 
 .user-sidebar.open {
@@ -396,7 +415,10 @@
 }
 
 .sidebar-content {
-  padding: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .sidebar-overlay {
@@ -411,12 +433,12 @@
 }
 
 .main-content {
-  transition: margin-left 0.3s ease-in-out;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: calc(100vh - 70px);
 }
 
 .main-content.sidebar-open {
-  margin-left: 320px;
+  margin-left: 300px;
 }
 
 /* Header updates for users button */
@@ -427,10 +449,10 @@
 }
 
 .users-menu-btn {
-  background: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 1.2rem;
   cursor: pointer;
@@ -440,15 +462,17 @@
   justify-content: center;
   min-width: 44px;
   height: 44px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .users-menu-btn:hover {
-  background: #0056b3;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
 .users-menu-btn.active {
-  background: #28a745;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
 /* Responsive sidebar */
