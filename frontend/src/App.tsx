@@ -1,9 +1,12 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useSocket } from './modules/shared/hooks';
 import { Header, JoinForm, SessionContainer } from './components';
+import CreateSession from './components/CreateSession';
+import SessionView from './components/SessionView';
 import './App.css';
 
-const App: React.FC = () => {
+const HomePage: React.FC = () => {
   const {
     isConnected,
     users,
@@ -23,10 +26,21 @@ const App: React.FC = () => {
       
       <main className="app-main">
         {!currentUser ? (
-          <JoinForm 
-            isConnected={isConnected}
-            onJoin={joinWithName}
-          />
+          <div className="home-content">
+            <div className="welcome-section">
+              <h1>Planning Poker</h1>
+              <p>Collaborate with your team for better estimations</p>
+              <div className="action-buttons">
+                <a href="/create-session" className="create-session-btn">
+                  🎯 Create New Session
+                </a>
+              </div>
+            </div>
+            <JoinForm 
+              isConnected={isConnected}
+              onJoin={joinWithName}
+            />
+          </div>
         ) : (
           <SessionContainer
             currentUser={currentUser}
@@ -38,6 +52,18 @@ const App: React.FC = () => {
         )}
       </main>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/create-session" element={<CreateSession />} />
+        <Route path="/session/:sessionId" element={<SessionView />} />
+      </Routes>
+    </Router>
   );
 };
 

@@ -3,12 +3,16 @@ import React from 'react';
 interface HeaderProps {
   isConnected: boolean;
   totalUsers: number;
+  sessionName?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ isConnected, totalUsers }) => {
+const Header: React.FC<HeaderProps> = ({ isConnected, totalUsers, sessionName }) => {
   return (
     <header className="app-header">
-      <h1>🃏 Planning Poker</h1>
+      <div className="header-title">
+        <h1>🃏 Planning Poker</h1>
+        {sessionName && <span className="session-name">{sessionName}</span>}
+      </div>
       <div className="connection-status">
         <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
           {isConnected ? '🟢 Connected' : '🔴 Disconnected'}

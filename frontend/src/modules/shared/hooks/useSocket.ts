@@ -24,14 +24,16 @@ export interface UseSocketReturn {
   users: ConnectedUser[];
   totalUsers: number;
   currentUser: ConnectedUser | null;
-  joinWithName: (name: string) => void;
+  joinWithName: (name: string, isSpectator?: boolean) => void;
   updateName: (newName: string) => void;
   messages: Array<{ id: string; message: string; timestamp: Date; type: 'info' | 'error' | 'success' }>;
 }
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
+// For WebSocket connections, we need to use the correct URL based on environment
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || 
+  `${window.location.protocol}//${window.location.hostname}:3001`;
 
-export const useSocket = (): UseSocketReturn => {
+export const useSocket = (sessionId?: string): UseSocketReturn => {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [users, setUsers] = useState<ConnectedUser[]>([]);
@@ -107,27 +109,34 @@ export const useSocket = (): UseSocketReturn => {
       addMessage(data.message, 'error');
     });
 
-    // Request current users when connected
+    // Request current users when connected (only if sessionId is provided)
     socket.on('connect', () => {
-      socket.emit('get-users');
+      if (sessionId) {
+        socket.emit('get-users', sessionId);
+      }
     });
 
     // Cleanup on unmount
     return () => {
       socket.disconnect();
     };
-  }, [addMessage]);
+  }, [addMessage, sessionId]);
 
-  const joinWithName = useCallback((name: string) => {
+  const joinWithName = useCallback((name: string, isSpectator: boolean = false) => {
     console.log('Attempting to join with name:', name.trim());
     console.log('Socket connected:', !!socketRef.current?.connected);
-    if (socketRef.current && name.trim()) {
-      socketRef.current.emit('user-join', name.trim());
-      console.log('Emitted user-join event');
+    if (socketRef.current && name.trim() && sessionId) {
+      const joinData = {
+        userName: name.trim(),
+        sessionId: sessionId,
+        isSpectator: isSpectator
+      };
+      socketRef.current.emit('user-join', joinData);
+      console.log('Emitted user-join event with session:', joinData);
     } else {
-      console.log('Cannot join - socket not connected or name empty');
+      console.log('Cannot join - socket not connected, name empty, or no sessionId');
     }
-  }, []);
+  }, [sessionId]);
 
   const updateName = useCallback((newName: string) => {
     if (socketRef.current && newName.trim()) {

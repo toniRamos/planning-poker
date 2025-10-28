@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
@@ -6,6 +9,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { MongoConnection } from './infrastructure/database/MongoConnection';
 import { UserService } from './application/services/UserService';
+import { sessionRoutes, sessionService } from './application/routes/sessionRoutes';
 
 const app = express();
 const server = createServer(app);
@@ -53,35 +57,62 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// API Routes
+app.use('/api', sessionRoutes);
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log(`🔌 User connected: ${socket.id}`);
 
-  // Handle user joining with their name
-  socket.on('user-join', (userName: string) => {
+  // Handle user joining with their name and session
+  socket.on('user-join', (data: { userName: string; sessionId: string; isSpectator?: boolean }) => {
+    const { userName, sessionId, isSpectator = false } = data;
+    
     if (!userName || userName.trim() === '') {
       socket.emit('error', { message: 'Name is required' });
       return;
     }
 
+    if (!sessionId || sessionId.trim() === '') {
+      socket.emit('error', { message: 'Session ID is required' });
+      return;
+    }
+
+    // Check if session exists
+    const session = sessionService.getSession(sessionId);
+    if (!session) {
+      socket.emit('error', { message: 'Session not found' });
+      return;
+    }
+
+    if (!session.isActive) {
+      socket.emit('error', { message: 'Session is not active' });
+      return;
+    }
+
     try {
-      const user = userService.addUser(socket.id, userName);
-      console.log(`👤 User joined: ${user.name} (${socket.id})`);
+      const user = userService.addUser(socket.id, userName, sessionId, isSpectator);
+      console.log(`👤 User joined session ${sessionId}: ${user.name} (${socket.id})`);
+      
+      // Join the socket to the session room
+      socket.join(sessionId);
       
       // Send welcome message to the user
       socket.emit('welcome', {
         user: user,
-        message: `Welcome ${user.name}!`
+        session: session,
+        message: `Welcome ${user.name} to ${session.name}!`
       });
 
-      // Broadcast updated user list to all clients
-      io.emit('users-updated', {
-        users: userService.getAllUsers(),
-        totalUsers: userService.getUserCount()
+      // Broadcast updated user list to all clients in the session
+      const sessionUsers = userService.getSessionUsers(sessionId);
+      io.to(sessionId).emit('users-updated', {
+        users: sessionUsers,
+        totalUsers: sessionUsers.length
       });
 
-      // Broadcast new user joined message to other users
-      socket.broadcast.emit('user-joined', {
+      // Broadcast new user joined message to other users in the session
+      socket.to(sessionId).emit('user-joined', {
         user: user,
         message: `${user.name} joined the session`
       });
@@ -100,19 +131,25 @@ io.on('connection', (socket) => {
     }
 
     const oldUser = userService.getUser(socket.id);
+    if (!oldUser) {
+      socket.emit('error', { message: 'User not found' });
+      return;
+    }
+
     const updatedUser = userService.updateUserName(socket.id, newName);
     
-    if (updatedUser && oldUser) {
-      console.log(`📝 User renamed: ${oldUser.name} -> ${updatedUser.name}`);
+    if (updatedUser) {
+      console.log(`📝 User renamed in session ${oldUser.sessionId}: ${oldUser.name} -> ${updatedUser.name}`);
       
-      // Broadcast updated user list to all clients
-      io.emit('users-updated', {
-        users: userService.getAllUsers(),
-        totalUsers: userService.getUserCount()
+      // Broadcast updated user list to all clients in the session
+      const sessionUsers = userService.getSessionUsers(oldUser.sessionId);
+      io.to(oldUser.sessionId).emit('users-updated', {
+        users: sessionUsers,
+        totalUsers: sessionUsers.length
       });
 
-      // Broadcast name change to other users
-      socket.broadcast.emit('user-name-changed', {
+      // Broadcast name change to other users in the session
+      socket.to(oldUser.sessionId).emit('user-name-changed', {
         oldName: oldUser.name,
         newName: updatedUser.name,
         message: `${oldUser.name} changed their name to ${updatedUser.name}`
@@ -129,16 +166,20 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const user = userService.removeUser(socket.id);
     if (user) {
-      console.log(`👋 User disconnected: ${user.name} (${socket.id})`);
+      console.log(`👋 User disconnected from session ${user.sessionId}: ${user.name} (${socket.id})`);
       
-      // Broadcast updated user list to remaining clients
-      io.emit('users-updated', {
-        users: userService.getAllUsers(),
-        totalUsers: userService.getUserCount()
+      // Leave the session room
+      socket.leave(user.sessionId);
+      
+      // Broadcast updated user list to remaining clients in the session
+      const sessionUsers = userService.getSessionUsers(user.sessionId);
+      io.to(user.sessionId).emit('users-updated', {
+        users: sessionUsers,
+        totalUsers: sessionUsers.length
       });
 
-      // Broadcast user left message to other users
-      socket.broadcast.emit('user-left', {
+      // Broadcast user left message to other users in the session
+      socket.to(user.sessionId).emit('user-left', {
         user: user,
         message: `${user.name} left the session`
       });
@@ -147,12 +188,44 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Handle request for current user list
-  socket.on('get-users', () => {
+  // Handle request for current session user list
+  socket.on('get-users', (sessionId: string) => {
+    if (!sessionId) {
+      socket.emit('error', { message: 'Session ID is required' });
+      return;
+    }
+
+    const sessionUsers = userService.getSessionUsers(sessionId);
     socket.emit('users-updated', {
-      users: userService.getAllUsers(),
-      totalUsers: userService.getUserCount()
+      users: sessionUsers,
+      totalUsers: sessionUsers.length
     });
+  });
+
+  // Handle switching between player and spectator mode
+  socket.on('switch-mode', () => {
+    const user = userService.getUser(socket.id);
+    if (!user) {
+      socket.emit('error', { message: 'User not found' });
+      return;
+    }
+
+    const updatedUser = userService.switchUserMode(socket.id);
+    if (updatedUser) {
+      console.log(`🔄 User switched mode in session ${user.sessionId}: ${updatedUser.name} -> ${updatedUser.isSpectator ? 'Spectator' : 'Player'}`);
+      
+      // Broadcast updated user list to all clients in the session
+      const sessionUsers = userService.getSessionUsers(user.sessionId);
+      io.to(user.sessionId).emit('users-updated', {
+        users: sessionUsers,
+        totalUsers: sessionUsers.length
+      });
+
+      socket.emit('mode-updated', {
+        user: updatedUser,
+        message: `You are now a ${updatedUser.isSpectator ? 'spectator' : 'player'}`
+      });
+    }
   });
 });
 
