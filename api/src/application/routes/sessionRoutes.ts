@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { SessionController } from '../controllers/SessionController';
 import { SessionService } from '../services/SessionService';
+import { InMemorySessionRepository } from '../../infrastructure/repositories/InMemorySessionRepository';
 
 const router = Router();
-const sessionService = new SessionService();
+const sessionRepository = new InMemorySessionRepository();
+const sessionService = new SessionService(sessionRepository);
 const sessionController = new SessionController(sessionService);
 
 /**

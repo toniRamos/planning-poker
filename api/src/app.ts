@@ -9,7 +9,13 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { MongoConnection } from './infrastructure/database/MongoConnection';
 import { UserService } from './application/services/UserService';
-import { sessionRoutes, sessionService } from './application/routes/sessionRoutes';
+import { UserStoryService } from './application/services/UserStoryService';
+import { UserStoryController } from './application/controllers/UserStoryController';
+import { InMemorySessionRepository } from './infrastructure/repositories/InMemorySessionRepository';
+import { createUserStoryRoutes } from './application/routes/userStoryRoutes';
+import { SessionService } from './application/services/SessionService';
+import { SessionController } from './application/controllers/SessionController';
+import { Router } from 'express';
 
 const app = express();
 const server = createServer(app);
@@ -24,8 +30,26 @@ const io = new Server(server, {
   }
 });
 
-// Initialize user service
+// Initialize services
 const userService = new UserService();
+const sessionRepository = new InMemorySessionRepository();
+
+// Initialize session service and routes
+const sessionService = new SessionService(sessionRepository);
+const sessionController = new SessionController(sessionService);
+const sessionRoutes = Router();
+
+// Session CRUD routes
+sessionRoutes.post('/sessions', sessionController.createSession.bind(sessionController));
+sessionRoutes.get('/sessions', sessionController.getAllSessions.bind(sessionController));
+sessionRoutes.get('/sessions/:id', sessionController.getSession.bind(sessionController));
+sessionRoutes.put('/sessions/:id', sessionController.updateSession.bind(sessionController));
+sessionRoutes.delete('/sessions/:id', sessionController.deleteSession.bind(sessionController));
+
+// Initialize user story service and routes
+const userStoryService = new UserStoryService(sessionRepository);
+const userStoryController = new UserStoryController(userStoryService);
+const userStoryRoutes = createUserStoryRoutes(userStoryController);
 
 app.use(cors());
 app.use(express.json());
@@ -59,6 +83,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api', sessionRoutes);
+app.use('/api', userStoryRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -79,48 +104,52 @@ io.on('connection', (socket) => {
     }
 
     // Check if session exists
-    const session = sessionService.getSession(sessionId);
-    if (!session) {
-      socket.emit('error', { message: 'Session not found' });
-      return;
-    }
+    sessionService.getSession(sessionId).then((session) => {
+      if (!session) {
+        socket.emit('error', { message: 'Session not found' });
+        return;
+      }
 
-    if (!session.isActive) {
-      socket.emit('error', { message: 'Session is not active' });
-      return;
-    }
+      if (!session.isActive) {
+        socket.emit('error', { message: 'Session is not active' });
+        return;
+      }
 
-    try {
-      const user = userService.addUser(socket.id, userName, sessionId, isSpectator);
-      console.log(`👤 User joined session ${sessionId}: ${user.name} (${socket.id})`);
-      
-      // Join the socket to the session room
-      socket.join(sessionId);
-      
-      // Send welcome message to the user
-      socket.emit('welcome', {
-        user: user,
-        session: session,
-        message: `Welcome ${user.name} to ${session.name}!`
-      });
+      try {
+        const user = userService.addUser(socket.id, userName, sessionId, isSpectator);
+        console.log(`👤 User joined session ${sessionId}: ${user.name} (${socket.id})`);
+        
+        // Join the socket to the session room
+        socket.join(sessionId);
+        
+        // Send welcome message to the user
+        socket.emit('welcome', {
+          user: user,
+          session: session,
+          message: `Welcome ${user.name} to ${session.name}!`
+        });
 
-      // Broadcast updated user list to all clients in the session
-      const sessionUsers = userService.getSessionUsers(sessionId);
-      io.to(sessionId).emit('users-updated', {
-        users: sessionUsers,
-        totalUsers: sessionUsers.length
-      });
+        // Broadcast updated user list to all clients in the session
+        const sessionUsers = userService.getSessionUsers(sessionId);
+        io.to(sessionId).emit('users-updated', {
+          users: sessionUsers,
+          totalUsers: sessionUsers.length
+        });
 
-      // Broadcast new user joined message to other users in the session
-      socket.to(sessionId).emit('user-joined', {
-        user: user,
-        message: `${user.name} joined the session`
-      });
+        // Broadcast new user joined message to other users in the session
+        socket.to(sessionId).emit('user-joined', {
+          user: user,
+          message: `${user.name} joined the session`
+        });
 
-    } catch (error) {
-      console.error('Error adding user:', error);
-      socket.emit('error', { message: 'Failed to join session' });
-    }
+      } catch (error) {
+        console.error('Error adding user:', error);
+        socket.emit('error', { message: 'Failed to join session' });
+      }
+    }).catch((error) => {
+      console.error('Error getting session:', error);
+      socket.emit('error', { message: 'Failed to get session' });
+    });
   });
 
   // Handle user name change

@@ -1,10 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Session, CreateSessionRequest, UpdateSessionRequest, SessionSettings } from '../../domain/entities/Session';
+import { SessionRepository } from '../../domain/repositories/SessionRepository';
 
 export class SessionService {
   private sessions: Map<string, Session> = new Map();
 
-  createSession(request: CreateSessionRequest): Session {
+  constructor(private sessionRepository?: SessionRepository) {}
+
+  async createSession(request: CreateSessionRequest): Promise<Session> {
     const sessionId = uuidv4();
     const now = new Date();
     
@@ -24,14 +27,24 @@ export class SessionService {
       updatedAt: now,
       isActive: true,
       maxUsers: request.maxUsers || 20,
-      settings: { ...defaultSettings, ...request.settings }
+      settings: { ...defaultSettings, ...request.settings },
+      userStories: [],
+      currentStoryId: undefined
     };
 
     this.sessions.set(sessionId, session);
+    
+    if (this.sessionRepository) {
+      await this.sessionRepository.create(session);
+    }
+    
     return session;
   }
 
-  getSession(sessionId: string): Session | null {
+  async getSession(sessionId: string): Promise<Session | null> {
+    if (this.sessionRepository) {
+      return await this.sessionRepository.findById(sessionId);
+    }
     return this.sessions.get(sessionId) || null;
   }
 

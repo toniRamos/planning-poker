@@ -39,7 +39,7 @@ export class SessionController {
    *       400:
    *         description: Invalid request data
    */
-  createSession = (req: Request, res: Response): void => {
+  createSession = async (req: Request, res: Response): Promise<void> => {
     try {
       const { name, description, createdBy, maxUsers, settings } = req.body;
 
@@ -58,7 +58,7 @@ export class SessionController {
         settings
       };
 
-      const session = this.sessionService.createSession(createRequest);
+      const session = await this.sessionService.createSession(createRequest);
 
       res.status(201).json({
         success: true,
@@ -91,10 +91,10 @@ export class SessionController {
    *       404:
    *         description: Session not found
    */
-  getSession = (req: Request, res: Response): void => {
+  getSession = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const session = this.sessionService.getSession(id);
+      const session = await this.sessionService.getSession(id);
 
       if (!session) {
         res.status(404).json({

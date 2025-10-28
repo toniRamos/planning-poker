@@ -1,3 +1,14 @@
+export interface UserStory {
+  id: string;
+  title: string;
+  description?: string;
+  acceptanceCriteria?: string;
+  order: number;
+  estimatedPoints?: string;
+  isRevealed: boolean;
+  createdAt: Date;
+}
+
 export interface Session {
   id: string;
   name: string;
@@ -8,6 +19,8 @@ export interface Session {
   isActive: boolean;
   maxUsers?: number;
   settings?: SessionSettings;
+  userStories: UserStory[];
+  currentStoryId?: string;
 }
 
 export interface SessionSettings {
