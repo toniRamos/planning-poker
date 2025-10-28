@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import * as anime from 'animejs';
 import './VotingPanel.css';
 
 interface Vote {
@@ -33,7 +34,7 @@ interface VotingPanelProps {
   onRevealVotes?: () => void;
 }
 
-const CARD_VALUES = ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'];
+const CARD_VALUES = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
 
 export const VotingPanel: React.FC<VotingPanelProps> = ({
   sessionId,
@@ -47,6 +48,8 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   const [myVote, setMyVote] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [votesRevealed, setVotesRevealed] = useState(false);
+  const cardsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const [selectedCard, setSelectedCard] = useState<number | null>(null);
 
   useEffect(() => {
     if (currentStory) {
@@ -119,6 +122,88 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       socket.off('role-changed', handleRoleChanged);
     };
   }, [socket, currentStory?.id]);
+
+  // Initialize card fan layout with hover animations
+  useEffect(() => {
+    if (!currentUser?.isSpectator && !isCreator && !votesRevealed && cardsRef.current.length > 0) {
+      const totalCards = CARD_VALUES.length;
+      const angleStep = 6; // degrees between cards
+      const startAngle = -((totalCards - 1) * angleStep) / 2;
+      const radius = 400; // Distance from center point
+
+      cardsRef.current.forEach((card, index) => {
+        if (card) {
+          const angle = startAngle + index * angleStep;
+          const isSelected = selectedCard === index;
+          
+          // Calculate position in arc
+          const radian = (angle * Math.PI) / 180;
+          const x = Math.sin(radian) * radius;
+          const y = Math.cos(radian) * radius - radius; // Offset to bottom
+          
+          // Set initial position and rotation
+          const baseTransform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
+          card.style.transform = isSelected ? `${baseTransform} translateY(-50px) scale(1.1)` : baseTransform;
+          card.style.zIndex = String(isSelected ? 200 : index);
+
+          // Store base transform for animations
+          card.dataset.baseTransform = baseTransform;
+          card.dataset.angle = String(angle);
+
+          // Remove old listeners if any
+          const oldMouseEnter = (card as any)._mouseEnterHandler;
+          const oldMouseLeave = (card as any)._mouseLeaveHandler;
+          if (oldMouseEnter) card.removeEventListener('mouseenter', oldMouseEnter);
+          if (oldMouseLeave) card.removeEventListener('mouseleave', oldMouseLeave);
+
+          // Mouse enter animation
+          const handleMouseEnter = () => {
+            if (selectedCard !== index) {
+              anime.animate(card, {
+                translateY: [0, -40],
+                scale: [1, 1.05],
+                duration: 400,
+                easing: 'out-expo',
+              });
+              card.style.zIndex = '100';
+            }
+          };
+
+          // Mouse leave animation
+          const handleMouseLeave = () => {
+            if (selectedCard !== index) {
+              anime.animate(card, {
+                translateY: [-40, 0],
+                scale: [1.05, 1],
+                duration: 400,
+                easing: 'out-expo',
+              });
+              card.style.zIndex = String(index);
+            }
+          };
+
+          // Store handlers for cleanup
+          (card as any)._mouseEnterHandler = handleMouseEnter;
+          (card as any)._mouseLeaveHandler = handleMouseLeave;
+
+          card.addEventListener('mouseenter', handleMouseEnter);
+          card.addEventListener('mouseleave', handleMouseLeave);
+        }
+      });
+
+      // Cleanup function
+      return () => {
+        cardsRef.current.forEach(card => {
+          if (card) {
+            const mouseEnter = (card as any)._mouseEnterHandler;
+            const mouseLeave = (card as any)._mouseLeaveHandler;
+            if (mouseEnter) card.removeEventListener('mouseenter', mouseEnter);
+            if (mouseLeave) card.removeEventListener('mouseleave', mouseLeave);
+          }
+        });
+      };
+    }
+  }, [currentUser?.isSpectator, isCreator, votesRevealed, selectedCard]);
 
   const fetchVotes = async () => {
     if (!currentStory) return;
@@ -265,11 +350,16 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
         <div className="voting-section">
           <h4>Select your estimate:</h4>
           <div className="voting-cards">
-            {CARD_VALUES.map((value) => (
+            {CARD_VALUES.map((value, index) => (
               <button
                 key={value}
+                ref={(el) => { cardsRef.current[index] = el; }}
                 className={`voting-card ${myVote === value ? 'selected' : ''}`}
-                onClick={() => submitVote(value)}
+                data-value={value}
+                onClick={() => {
+                  setSelectedCard(index);
+                  submitVote(value);
+                }}
                 disabled={isLoading}
               >
                 {value}
