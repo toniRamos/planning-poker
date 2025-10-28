@@ -9,6 +9,7 @@ interface UserStory {
   order: number;
   estimatedPoints?: string;
   isRevealed: boolean;
+  isScored: boolean;
   createdAt: string;
 }
 
@@ -88,15 +89,24 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       onStoryChange?.(); // Trigger parent refresh
     };
 
+    const handleStoryScoreToggled = (data: any) => {
+      console.log('Story score toggled:', data.userStory);
+      setUserStories(prev => prev.map(story => 
+        story.id === data.userStory.id ? { ...story, isScored: data.userStory.isScored } : story
+      ));
+    };
+
     socket.on('user-story-updated', handleUserStoryUpdated);
     socket.on('current-story-changed', handleCurrentStoryChanged);
     socket.on('story-revealed', handleStoryRevealed);
+    socket.on('story-score-toggled', handleStoryScoreToggled);
     socket.on('role-changed', handleRoleChanged);
 
     return () => {
       socket.off('user-story-updated', handleUserStoryUpdated);
       socket.off('current-story-changed', handleCurrentStoryChanged);
       socket.off('story-revealed', handleStoryRevealed);
+      socket.off('story-score-toggled', handleStoryScoreToggled);
       socket.off('role-changed', handleRoleChanged);
     };
   }, [socket, onStoryChange]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -250,6 +260,31 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
     }
   };
 
+  const toggleUserStoryScore = async (storyId: string) => {
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}/toggle-score`, {
+        method: 'PUT',
+      });
+
+      if (response.ok) {
+        const updatedUserStory = await response.json();
+        setUserStories(prev => prev.map(story => 
+          story.id === storyId ? updatedUserStory : story
+        ));
+        
+        // Emit WebSocket event to notify other users
+        if (socket) {
+          socket.emit('story-score-toggled', {
+            sessionId,
+            userStory: updatedUserStory
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling user story score:', error);
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index);
   };
@@ -360,7 +395,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
           userStories.map((story, index) => (
             <div
               key={story.id}
-              className={`story-item ${currentStoryId === story.id ? 'current' : ''}`}
+              className={`story-item ${currentStoryId === story.id ? 'current' : ''} ${story.isScored ? 'scored' : ''}`}
               draggable={isCreator}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={handleDragOver}
@@ -369,9 +404,12 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
               <div className="story-content">
                 <div className="story-header-item">
                   <span className="story-order">#{story.order + 1}</span>
-                  <h4 className="story-title">{story.title}</h4>
+                  <h4 className={`story-title ${story.isScored ? 'scored' : ''}`}>{story.title}</h4>
                   {currentStoryId === story.id && (
                     <span className="current-badge">Actual</span>
+                  )}
+                  {story.isScored && (
+                    <span className="scored-badge">✅ Puntuada</span>
                   )}
                 </div>
                 
@@ -403,6 +441,13 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                       Estimar Ahora
                     </button>
                   )}
+                  <button
+                    className={`btn btn-sm ${story.isScored ? 'btn-success' : 'btn-secondary'}`}
+                    onClick={() => toggleUserStoryScore(story.id)}
+                    title={story.isScored ? 'Marcar como no puntuada' : 'Marcar como puntuada'}
+                  >
+                    {story.isScored ? '✅ Puntuada' : '⚪ Marcar'}
+                  </button>
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => deleteUserStory(story.id)}

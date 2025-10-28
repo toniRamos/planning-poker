@@ -24,6 +24,7 @@ export class UserStoryService {
       order: session.userStories.length,
       estimatedPoints: undefined,
       isRevealed: false,
+      isScored: false,
       createdAt: new Date()
     };
 
@@ -152,5 +153,24 @@ export class UserStoryService {
     }
 
     return session.userStories.sort((a: UserStory, b: UserStory) => a.order - b.order);
+  }
+
+  async toggleUserStoryScore(sessionId: string, userStoryId: string): Promise<UserStory> {
+    const session = await this.sessionRepository.findById(sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+
+    const userStoryIndex = session.userStories.findIndex((us: UserStory) => us.id === userStoryId);
+    if (userStoryIndex === -1) {
+      throw new Error('User story not found');
+    }
+
+    const userStory = session.userStories[userStoryIndex];
+    userStory.isScored = !userStory.isScored;
+    session.updatedAt = new Date();
+
+    await this.sessionRepository.update(sessionId, session);
+    return userStory;
   }
 }

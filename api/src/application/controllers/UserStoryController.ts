@@ -107,4 +107,15 @@ export class UserStoryController {
       res.status(500).json({ error: 'Failed to delete user story' });
     }
   }
+
+  async toggleUserStoryScore(req: Request, res: Response): Promise<void> {
+    try {
+      const { sessionId, userStoryId } = req.params;
+      const updatedUserStory = await this.userStoryService.toggleUserStoryScore(sessionId, userStoryId);
+      res.json(updatedUserStory);
+    } catch (error) {
+      console.error('Error toggling user story score:', error);
+      res.status(500).json({ error: 'Failed to toggle user story score' });
+    }
+  }
 }

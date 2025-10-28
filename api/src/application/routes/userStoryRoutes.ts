@@ -34,6 +34,11 @@ export function createUserStoryRoutes(userStoryController: UserStoryController):
     userStoryController.revealCurrentStory.bind(userStoryController)
   );
 
+  // Marcar/desmarcar user story como puntuada
+  router.put('/sessions/:sessionId/user-stories/:userStoryId/toggle-score', 
+    userStoryController.toggleUserStoryScore.bind(userStoryController)
+  );
+
   // Eliminar una user story
   router.delete('/sessions/:sessionId/user-stories/:userStoryId', 
     userStoryController.deleteUserStory.bind(userStoryController)

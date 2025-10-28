@@ -384,6 +384,13 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('story-score-toggled', (data: { sessionId: string; userStory: any }) => {
+    // Broadcast to all users in the session that a story score status was toggled
+    socket.to(data.sessionId).emit('story-score-toggled', {
+      userStory: data.userStory
+    });
+  });
+
   // Voting WebSocket events
   socket.on('vote-submitted', (data: { sessionId: string; vote: any; userId: string }) => {
     // Broadcast to all users in the session that a vote was submitted (without revealing the vote)

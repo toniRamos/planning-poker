@@ -289,3 +289,55 @@
     flex: 1;
   }
 }
+
+/* Scored story styles */
+.story-title.scored {
+  text-decoration: line-through;
+  opacity: 0.7;
+  color: #28a745;
+}
+
+.scored-badge {
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.story-item.scored {
+  background: #f8fff8;
+  border-color: #28a745;
+  opacity: 0.9;
+}
+
+.story-item.scored .story-order {
+  background: #28a745;
+}
+
+/* Score toggle button styles */
+.btn.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: white;
+}
+
+.btn.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.btn.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
+.btn.btn-secondary:hover {
+  background-color: #545b62;
+  border-color: #4e555b;
+}

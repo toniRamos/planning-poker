@@ -6,6 +6,7 @@ export interface UserStory {
   order: number;
   estimatedPoints?: string;
   isRevealed: boolean;
+  isScored: boolean;
   createdAt: Date;
 }
 
