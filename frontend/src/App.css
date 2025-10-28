@@ -10,30 +10,77 @@
 
 /* Home Page Styles */
 .home-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
   align-items: center;
-  min-height: 60vh;
+  min-height: 70vh;
+  padding: 40px 0;
 }
 
 .welcome-section {
   text-align: center;
-  padding: 40px;
+  max-width: 800px;
+  padding: 0 20px;
 }
 
-.welcome-section h1 {
-  font-size: 3rem;
+.welcome-section h2 {
+  font-size: 2.5rem;
   margin: 0 0 20px 0;
   color: #2c3e50;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .welcome-section p {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: #6c757d;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  width: 100%;
+  max-width: 900px;
+}
+
+.feature {
+  text-align: center;
+  padding: 30px 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.feature h3 {
+  font-size: 1.4rem;
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.feature p {
+  font-size: 1rem;
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .action-buttons {
@@ -63,18 +110,30 @@
 }
 
 @media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 2.8rem;
+  }
+  
   .home-content {
+    gap: 40px;
+    padding: 20px 0;
+  }
+  
+  .welcome-section h2 {
+    font-size: 2rem;
+  }
+  
+  .welcome-section p {
+    font-size: 1.1rem;
+  }
+  
+  .features-section {
     grid-template-columns: 1fr;
-    gap: 30px;
-    text-align: center;
+    gap: 25px;
   }
   
-  .welcome-section {
-    padding: 20px;
-  }
-  
-  .welcome-section h1 {
-    font-size: 2.5rem;
+  .feature {
+    padding: 25px 15px;
   }
   
   .action-buttons {
@@ -88,20 +147,49 @@
   }
 }
 
+@media (max-width: 480px) {
+  .app {
+    padding: 15px;
+  }
+  
+  .app-header {
+    padding: 20px 0 15px 0;
+  }
+  
+  .app-header h1 {
+    font-size: 2.2rem;
+  }
+  
+  .welcome-section h2 {
+    font-size: 1.6rem;
+  }
+  
+  .welcome-section p {
+    font-size: 1rem;
+  }
+  
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+}
+
 /* Header */
 .app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 0;
-  border-bottom: 2px solid #e0e0e0;
-  margin-bottom: 30px;
+  text-align: center;
+  padding: 40px 0 20px 0;
+  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 40px;
 }
 
 .app-header h1 {
   margin: 0;
   color: #2c3e50;
-  font-size: 2.5rem;
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .connection-status {
