@@ -47,6 +47,7 @@ export class VoteService {
       const newVote: Vote = {
         id: uuidv4(),
         userId: request.userId,
+        userName: request.userName,
         userStoryId: request.userStoryId,
         sessionId: request.sessionId,
         points: request.points,

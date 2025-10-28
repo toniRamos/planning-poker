@@ -8,15 +8,16 @@ export class VoteController {
   async submitVote(req: Request, res: Response): Promise<void> {
     try {
       const { sessionId, userStoryId } = req.params;
-      const { userId, points } = req.body;
+      const { userId, userName, points } = req.body;
 
-      if (!userId || !points) {
-        res.status(400).json({ error: 'userId and points are required' });
+      if (!userId || !userName || !points) {
+        res.status(400).json({ error: 'userId, userName and points are required' });
         return;
       }
 
       const voteRequest: CreateVoteRequest = {
         userId,
+        userName,
         userStoryId,
         sessionId,
         points

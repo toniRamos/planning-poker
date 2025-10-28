@@ -1,6 +1,7 @@
 export interface Vote {
   id: string;
   userId: string;
+  userName: string;
   userStoryId: string;
   sessionId: string;
   points: string;
@@ -11,6 +12,7 @@ export interface Vote {
 
 export interface CreateVoteRequest {
   userId: string;
+  userName: string;
   userStoryId: string;
   sessionId: string;
   points: string;

@@ -4,6 +4,7 @@ import './VotingPanel.css';
 interface Vote {
   id: string;
   userId: string;
+  userName: string;
   userStoryId: string;
   sessionId: string;
   points: string;
@@ -114,6 +115,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${currentStory.id}/votes`);
       if (response.ok) {
         const fetchedVotes = await response.json();
+        console.log('Fetched votes:', fetchedVotes); // Debug line
         setVotes(fetchedVotes);
         
         // Find my vote
@@ -139,6 +141,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
         },
         body: JSON.stringify({
           userId: currentUser.id,
+          userName: currentUser.name,
           points: points
         }),
       });
@@ -152,7 +155,8 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
           socket.emit('vote-submitted', {
             sessionId,
             vote,
-            userId: currentUser.id
+            userId: currentUser.id,
+            userName: currentUser.name
           });
         }
 
@@ -292,13 +296,18 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
               className={`vote-card ${vote.isRevealed || votesRevealed ? 'revealed' : 'hidden'}`}
             >
               {vote.isRevealed || votesRevealed ? vote.points : '?'}
-              <div className="vote-user">Player {index + 1}</div>
+              <div className="vote-user">{vote.userName?.trim() || 'Usuario'}</div>
             </div>
           ))}
         </div>
         
         <div className="vote-summary">
           {votes.length} vote{votes.length !== 1 ? 's' : ''} submitted
+          {!votesRevealed && votes.length > 0 && (
+            <div className="voters-list">
+              <small>Han votado: {votes.map(vote => vote.userName?.trim() || 'Usuario').join(', ')}</small>
+            </div>
+          )}
         </div>
       </div>
 

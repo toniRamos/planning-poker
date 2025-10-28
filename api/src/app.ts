@@ -392,10 +392,11 @@ io.on('connection', (socket) => {
   });
 
   // Voting WebSocket events
-  socket.on('vote-submitted', (data: { sessionId: string; vote: any; userId: string }) => {
+  socket.on('vote-submitted', (data: { sessionId: string; vote: any; userId: string; userName: string }) => {
     // Broadcast to all users in the session that a vote was submitted (without revealing the vote)
     socket.to(data.sessionId).emit('vote-submitted', {
       userId: data.userId,
+      userName: data.userName,
       userStoryId: data.vote.userStoryId,
       hasVoted: true
     });
