@@ -32,23 +32,26 @@ const io = new Server(server, {
 
 // Initialize services
 const userService = new UserService();
+
+// Create shared session repository instance
 const sessionRepository = new InMemorySessionRepository();
 
-// Initialize session service and routes
+// Initialize session service and routes (using shared repository)
 const sessionService = new SessionService(sessionRepository);
 const sessionController = new SessionController(sessionService);
-const sessionRoutes = Router();
 
-// Session CRUD routes
+// Initialize user story service and routes (using same repository)
+const userStoryService = new UserStoryService(sessionRepository);
+const userStoryController = new UserStoryController(userStoryService);
+
+// Create routes
+const sessionRoutes = Router();
 sessionRoutes.post('/sessions', sessionController.createSession.bind(sessionController));
 sessionRoutes.get('/sessions', sessionController.getAllSessions.bind(sessionController));
 sessionRoutes.get('/sessions/:id', sessionController.getSession.bind(sessionController));
 sessionRoutes.put('/sessions/:id', sessionController.updateSession.bind(sessionController));
 sessionRoutes.delete('/sessions/:id', sessionController.deleteSession.bind(sessionController));
 
-// Initialize user story service and routes
-const userStoryService = new UserStoryService(sessionRepository);
-const userStoryController = new UserStoryController(userStoryService);
 const userStoryRoutes = createUserStoryRoutes(userStoryController);
 
 app.use(cors());
@@ -255,6 +258,53 @@ io.on('connection', (socket) => {
         message: `You are now a ${updatedUser.isSpectator ? 'spectator' : 'player'}`
       });
     }
+  });
+
+  // User Stories WebSocket events
+  socket.on('user-story-added', (data: { sessionId: string; userStory: any }) => {
+    // Broadcast to all users in the session that a new user story was added
+    socket.to(data.sessionId).emit('user-story-updated', {
+      action: 'added',
+      userStory: data.userStory
+    });
+  });
+
+  socket.on('user-story-updated', (data: { sessionId: string; userStory: any }) => {
+    // Broadcast to all users in the session that a user story was updated
+    socket.to(data.sessionId).emit('user-story-updated', {
+      action: 'updated',
+      userStory: data.userStory
+    });
+  });
+
+  socket.on('user-story-deleted', (data: { sessionId: string; userStoryId: string }) => {
+    // Broadcast to all users in the session that a user story was deleted
+    socket.to(data.sessionId).emit('user-story-updated', {
+      action: 'deleted',
+      userStoryId: data.userStoryId
+    });
+  });
+
+  socket.on('user-stories-reordered', (data: { sessionId: string; userStories: any[] }) => {
+    // Broadcast to all users in the session that user stories were reordered
+    socket.to(data.sessionId).emit('user-story-updated', {
+      action: 'reordered',
+      userStories: data.userStories
+    });
+  });
+
+  socket.on('current-story-changed', (data: { sessionId: string; currentStoryId: string }) => {
+    // Broadcast to all users in the session that the current story changed
+    socket.to(data.sessionId).emit('current-story-changed', {
+      currentStoryId: data.currentStoryId
+    });
+  });
+
+  socket.on('story-revealed', (data: { sessionId: string; userStory: any }) => {
+    // Broadcast to all users in the session that the story was revealed
+    socket.to(data.sessionId).emit('story-revealed', {
+      userStory: data.userStory
+    });
   });
 });
 

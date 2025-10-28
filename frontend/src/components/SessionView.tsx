@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header, JoinForm, SessionContainer } from './';
+import { UserStoryManager } from '../modules/shared/components/UserStoryManager';
 import { useSocket } from '../modules/shared/hooks';
 import './SessionView.css';
+
+interface UserStory {
+  id: string;
+  title: string;
+  description?: string;
+  acceptanceCriteria?: string;
+  order: number;
+  estimatedPoints?: string;
+  isRevealed: boolean;
+  createdAt: string;
+}
 
 interface Session {
   id: string;
@@ -12,6 +24,8 @@ interface Session {
   createdAt: string;
   isActive: boolean;
   maxUsers: number;
+  userStories: UserStory[];
+  currentStoryId?: string;
   settings: {
     allowSpectators: boolean;
     autoRevealCards: boolean;
@@ -26,6 +40,7 @@ const SessionView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const {
+    socket,
     isConnected,
     users,
     totalUsers,
@@ -50,7 +65,7 @@ const SessionView: React.FC = () => {
           if (response.status === 404) {
             throw new Error('Session not found');
           }
-          throw new Error('Failed to load session');
+          throw new Error('Failed to fetch session');
         }
 
         const result = await response.json();
@@ -64,6 +79,16 @@ const SessionView: React.FC = () => {
 
     fetchSession();
   }, [sessionId]);
+
+  // Function to refresh session data (for when stories are updated)
+  const refreshSession = () => {
+    if (sessionId) {
+      fetch(`/api/sessions/${sessionId}`)
+        .then(response => response.json())
+        .then(result => setSession(result.data))
+        .catch(console.error);
+    }
+  };
 
   const handleJoinSession = (userName: string, isSpectator: boolean = false) => {
     joinWithName(userName, isSpectator);
@@ -162,13 +187,23 @@ const SessionView: React.FC = () => {
             </div>
 
             {currentUser && (
-              <SessionContainer
-                currentUser={currentUser}
-                users={users}
-                totalUsers={totalUsers}
-                messages={messages}
-                onUpdateName={updateName}
-              />
+              <>
+                <UserStoryManager
+                  sessionId={sessionId!}
+                  isCreator={currentUser.name === session.createdBy}
+                  currentStoryId={session.currentStoryId}
+                  onStoryChange={refreshSession}
+                  socket={socket}
+                />
+                
+                <SessionContainer
+                  currentUser={currentUser}
+                  users={users}
+                  totalUsers={totalUsers}
+                  messages={messages}
+                  onUpdateName={updateName}
+                />
+              </>
             )}
           </>
         )}
