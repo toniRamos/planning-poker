@@ -81,14 +81,23 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       ));
     };
 
+    const handleRoleChanged = (data: any) => {
+      console.log('Role changed, refreshing user story manager:', data);
+      // Force re-render by refreshing user stories
+      fetchUserStories(); // eslint-disable-line react-hooks/exhaustive-deps
+      onStoryChange?.(); // Trigger parent refresh
+    };
+
     socket.on('user-story-updated', handleUserStoryUpdated);
     socket.on('current-story-changed', handleCurrentStoryChanged);
     socket.on('story-revealed', handleStoryRevealed);
+    socket.on('role-changed', handleRoleChanged);
 
     return () => {
       socket.off('user-story-updated', handleUserStoryUpdated);
       socket.off('current-story-changed', handleCurrentStoryChanged);
       socket.off('story-revealed', handleStoryRevealed);
+      socket.off('role-changed', handleRoleChanged);
     };
   }, [socket, onStoryChange]); // eslint-disable-line react-hooks/exhaustive-deps
 

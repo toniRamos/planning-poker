@@ -275,6 +275,68 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle admin changing user roles
+  socket.on('change-user-role', (data: { targetUserId: string; newRole: string; sessionId: string }) => {
+    const { targetUserId, newRole, sessionId } = data;
+    
+    // Verify that the requesting user is an admin
+    const requestingUser = userService.getUser(socket.id);
+    if (!requestingUser || requestingUser.role !== UserRole.ADMIN) {
+      socket.emit('error', { message: 'Only admins can change user roles' });
+      return;
+    }
+
+    // Verify the session matches
+    if (requestingUser.sessionId !== sessionId) {
+      socket.emit('error', { message: 'Invalid session' });
+      return;
+    }
+
+    // Find target user by their socket ID or user ID
+    const targetUser = userService.getUser(targetUserId);
+    if (!targetUser) {
+      socket.emit('error', { message: 'Target user not found' });
+      return;
+    }
+
+    // Validate new role
+    const validRoles = [UserRole.ADMIN, UserRole.PLAYER, UserRole.VIEWER];
+    if (!validRoles.includes(newRole as UserRole)) {
+      socket.emit('error', { message: 'Invalid role specified' });
+      return;
+    }
+
+    // Change the user's role
+    const updatedUser = userService.changeUserRole(targetUserId, newRole as UserRole);
+    if (updatedUser) {
+      console.log(`👑 Admin ${requestingUser.name} changed ${updatedUser.name}'s role to ${newRole} in session ${sessionId}`);
+      
+      // Broadcast updated user list to all clients in the session
+      const sessionUsers = userService.getSessionUsers(sessionId);
+      io.to(sessionId).emit('users-updated', {
+        users: sessionUsers,
+        totalUsers: sessionUsers.length
+      });
+
+      // Notify the target user about their role change
+      const targetSocket = [...io.sockets.sockets.values()].find(s => s.id === targetUserId);
+      if (targetSocket) {
+        targetSocket.emit('role-changed', {
+          newRole: newRole,
+          message: `Your role has been changed to ${newRole} by ${requestingUser.name}`
+        });
+      }
+
+      // Confirm to the admin
+      socket.emit('role-change-success', {
+        targetUser: updatedUser,
+        message: `Successfully changed ${updatedUser.name}'s role to ${newRole}`
+      });
+    } else {
+      socket.emit('error', { message: 'Failed to change user role' });
+    }
+  });
+
   // User Stories WebSocket events
   socket.on('user-story-added', (data: { sessionId: string; userStory: any }) => {
     // Broadcast to all users in the session that a new user story was added

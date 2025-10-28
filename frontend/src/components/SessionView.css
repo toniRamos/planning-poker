@@ -360,15 +360,40 @@
   }
 }
 
+/* Role change notification styles */
+.role-change-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: #6f42c1;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  font-weight: 600;
+  max-width: 300px;
+  animation: slideInNotification 0.3s ease-out, slideOutNotification 0.3s ease-in 3.7s forwards;
+}
+
 /* Responsive notification */
 @media (max-width: 768px) {
   .copy-notification {
     top: 10px;
     right: 10px;
     left: 10px;
-    right: 10px;
     text-align: center;
     font-size: 14px;
     padding: 10px 16px;
+  }
+
+  .role-change-notification {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    text-align: center;
+    font-size: 14px;
+    padding: 10px 16px;
+    max-width: none;
   }
 }

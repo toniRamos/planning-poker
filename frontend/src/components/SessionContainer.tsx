@@ -4,12 +4,16 @@ import UsersList from './UsersList';
 import ActivityFeed, { Message } from './ActivityFeed';
 import { ConnectedUser } from '../modules/shared/hooks/useSocket';
 
+import { Socket } from 'socket.io-client';
+
 interface SessionContainerProps {
   currentUser: ConnectedUser;
   users: ConnectedUser[];
   totalUsers: number;
   messages: Message[];
   onUpdateName: (newName: string) => void;
+  sessionId: string;
+  socket?: Socket | null;
 }
 
 const SessionContainer: React.FC<SessionContainerProps> = ({
@@ -17,7 +21,9 @@ const SessionContainer: React.FC<SessionContainerProps> = ({
   users,
   totalUsers,
   messages,
-  onUpdateName
+  onUpdateName,
+  sessionId,
+  socket
 }) => {
   return (
     <div className="session-container">
@@ -30,6 +36,9 @@ const SessionContainer: React.FC<SessionContainerProps> = ({
         users={users}
         totalUsers={totalUsers}
         currentUserId={currentUser.id}
+        currentUserRole={currentUser.role}
+        sessionId={sessionId}
+        socket={socket}
       />
       
       <ActivityFeed messages={messages} />

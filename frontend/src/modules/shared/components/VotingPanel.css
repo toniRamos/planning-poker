@@ -343,3 +343,19 @@
   font-style: italic;
   font-size: 0.9rem;
 }
+
+/* Voting info styles */
+.voting-info {
+  text-align: center;
+  padding: 15px 20px;
+  background: #f0f8ff;
+  border: 1px solid #b6d7ff;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.voting-info p {
+  margin: 0;
+  color: #0056b3;
+  font-size: 0.9rem;
+}

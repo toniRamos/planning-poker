@@ -107,6 +107,17 @@ export class UserService {
     return null;
   }
 
+  changeUserRole(socketId: string, newRole: UserRole): ConnectedUser | null {
+    const user = this.connectedUsers.get(socketId);
+    if (user) {
+      user.role = newRole;
+      user.isSpectator = newRole === UserRole.VIEWER;
+      this.connectedUsers.set(socketId, user);
+      return user;
+    }
+    return null;
+  }
+
   getUsersByRole(sessionId: string, role: UserRole): ConnectedUser[] {
     const sessionUserIds = this.sessionUsers.get(sessionId) || new Set();
     return Array.from(sessionUserIds)

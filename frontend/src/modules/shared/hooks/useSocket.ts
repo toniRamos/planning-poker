@@ -113,6 +113,22 @@ export const useSocket = (sessionId?: string): UseSocketReturn => {
       addMessage(data.message, 'error');
     });
 
+    socket.on('role-changed', (data) => {
+      console.log('Role changed in useSocket:', data);
+      // Update current user's role if it's our role that changed
+      setCurrentUser(prevUser => {
+        if (prevUser) {
+          return {
+            ...prevUser,
+            role: data.newRole as UserRole,
+            isSpectator: data.newRole === UserRole.VIEWER
+          };
+        }
+        return prevUser;
+      });
+      addMessage(data.message, 'info');
+    });
+
     // Request current users when connected (only if sessionId is provided)
     socket.on('connect', () => {
       if (sessionId) {

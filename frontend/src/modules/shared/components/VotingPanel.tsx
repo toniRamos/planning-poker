@@ -86,14 +86,24 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       }
     };
 
+    const handleRoleChanged = (data: any) => {
+      console.log('User role changed:', data);
+      // Force re-render by clearing and refetching votes
+      if (currentStory) {
+        fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
+      }
+    };
+
     socket.on('vote-submitted', handleVoteSubmitted);
     socket.on('votes-revealed', handleVotesRevealed);
     socket.on('votes-cleared', handleVotesCleared);
+    socket.on('role-changed', handleRoleChanged);
 
     return () => {
       socket.off('vote-submitted', handleVoteSubmitted);
       socket.off('votes-revealed', handleVotesRevealed);
       socket.off('votes-cleared', handleVotesCleared);
+      socket.off('role-changed', handleRoleChanged);
     };
   }, [socket, currentStory?.id]);
 
@@ -118,7 +128,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   };
 
   const submitVote = async (points: string) => {
-    if (!currentUser || !currentStory || currentUser.isSpectator) return;
+    if (!currentUser || !currentStory || currentUser.isSpectator || isCreator) return;
 
     setIsLoading(true);
     try {
@@ -235,7 +245,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       </div>
 
       {/* Voting Cards */}
-      {!currentUser?.isSpectator && !votesRevealed && (
+      {!currentUser?.isSpectator && !isCreator && !votesRevealed && (
         <div className="voting-section">
           <h4>Select your estimate:</h4>
           <div className="voting-cards">
@@ -256,6 +266,19 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
               ✅ Your vote: <span className="vote-value">{myVote}</span>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Information messages for non-voters */}
+      {currentUser?.isSpectator && !votesRevealed && (
+        <div className="voting-info">
+          <p>👁️ You are observing as a <strong>Viewer</strong> - you cannot vote</p>
+        </div>
+      )}
+
+      {isCreator && !votesRevealed && (
+        <div className="voting-info">
+          <p>👑 You are the <strong>Admin</strong> - you manage voting but cannot vote yourself</p>
         </div>
       )}
 

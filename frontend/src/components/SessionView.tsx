@@ -41,6 +41,7 @@ const SessionView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [roleChangeNotification, setRoleChangeNotification] = useState<string | null>(null);
   
   // Check if user is creator (from URL params)
   const urlParams = new URLSearchParams(window.location.search);
@@ -108,6 +109,34 @@ const SessionView: React.FC = () => {
       handleJoinSession(creatorName, UserRole.ADMIN);
     }
   }, [creatorName, session, currentUser, socket]);
+
+  // Listen for role changes
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRoleChanged = (data: { newRole: string; message: string }) => {
+      console.log('Role changed:', data);
+      // Force refresh of session data to update permissions
+      refreshSession();
+      // Show notification about role change
+      setRoleChangeNotification(data.message);
+      setTimeout(() => setRoleChangeNotification(null), 4000);
+    };
+
+    const handleRoleChangeSuccess = (data: { targetUser: any; message: string }) => {
+      console.log('Role change success:', data);
+      // Refresh session when admin changes someone's role
+      refreshSession();
+    };
+
+    socket.on('role-changed', handleRoleChanged);
+    socket.on('role-change-success', handleRoleChangeSuccess);
+
+    return () => {
+      socket.off('role-changed', handleRoleChanged);
+      socket.off('role-change-success', handleRoleChangeSuccess);
+    };
+  }, [socket, refreshSession]);
 
   // Function to handle sharing session URL
   const handleShareSession = async () => {
@@ -181,6 +210,13 @@ const SessionView: React.FC = () => {
       {showCopyNotification && (
         <div className="copy-notification">
           ✅ Session URL copied to clipboard!
+        </div>
+      )}
+
+      {/* Role change notification */}
+      {roleChangeNotification && (
+        <div className="role-change-notification">
+          🎭 {roleChangeNotification}
         </div>
       )}
       
@@ -269,6 +305,8 @@ const SessionView: React.FC = () => {
                   totalUsers={totalUsers}
                   messages={messages}
                   onUpdateName={updateName}
+                  sessionId={sessionId!}
+                  socket={socket}
                 />
               </>
             )}
