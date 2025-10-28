@@ -39,6 +39,11 @@ export function createUserStoryRoutes(userStoryController: UserStoryController):
     userStoryController.toggleUserStoryScore.bind(userStoryController)
   );
 
+  // Resetear la votación de una user story
+  router.put('/sessions/:sessionId/user-stories/:userStoryId/reset-voting', 
+    userStoryController.resetUserStoryVoting.bind(userStoryController)
+  );
+
   // Eliminar una user story
   router.delete('/sessions/:sessionId/user-stories/:userStoryId', 
     userStoryController.deleteUserStory.bind(userStoryController)

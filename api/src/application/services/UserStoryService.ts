@@ -1,9 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { UserStory } from '../../domain/entities/Session';
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
+import { VoteService } from './VoteService';
 
 export class UserStoryService {
-  constructor(private sessionRepository: SessionRepository) {}
+  constructor(
+    private sessionRepository: SessionRepository,
+    private voteService?: VoteService
+  ) {}
 
   async addUserStory(
     sessionId: string, 
@@ -171,6 +175,33 @@ export class UserStoryService {
     session.updatedAt = new Date();
 
     await this.sessionRepository.update(sessionId, session);
+    return userStory;
+  }
+
+  async resetUserStoryVoting(sessionId: string, userStoryId: string): Promise<UserStory> {
+    const session = await this.sessionRepository.findById(sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+
+    const userStoryIndex = session.userStories.findIndex((us: UserStory) => us.id === userStoryId);
+    if (userStoryIndex === -1) {
+      throw new Error('User story not found');
+    }
+
+    const userStory = session.userStories[userStoryIndex];
+    // Reset voting state
+    userStory.isRevealed = false;
+    userStory.estimatedPoints = undefined;
+    session.updatedAt = new Date();
+
+    await this.sessionRepository.update(sessionId, session);
+
+    // Clear all votes for this story
+    if (this.voteService) {
+      await this.voteService.clearVotesForStory(userStoryId);
+    }
+
     return userStory;
   }
 }

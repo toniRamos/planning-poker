@@ -47,13 +47,13 @@ const voteRepository = new InMemoryVoteRepository();
 const sessionService = new SessionService(sessionRepository);
 const sessionController = new SessionController(sessionService);
 
-// Initialize user story service and routes (using same repository)
-const userStoryService = new UserStoryService(sessionRepository);
-const userStoryController = new UserStoryController(userStoryService);
-
-// Initialize vote service and routes
+// Initialize vote service first (needed by userStoryService)
 const voteService = new VoteService(voteRepository, sessionRepository);
 const voteController = new VoteController(voteService);
+
+// Initialize user story service and routes (using same repository)
+const userStoryService = new UserStoryService(sessionRepository, voteService);
+const userStoryController = new UserStoryController(userStoryService);
 
 // Create routes
 const sessionRoutes = Router();
@@ -388,6 +388,13 @@ io.on('connection', (socket) => {
     // Broadcast to all users in the session that the story was revealed
     socket.to(data.sessionId).emit('story-revealed', {
       userStory: data.userStory
+    });
+  });
+
+  socket.on('voting-reset', (data: { sessionId: string; userStoryId: string }) => {
+    // Broadcast to all users in the session that voting was reset
+    socket.to(data.sessionId).emit('voting-reset', {
+      userStoryId: data.userStoryId
     });
   });
 

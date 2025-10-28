@@ -118,4 +118,15 @@ export class UserStoryController {
       res.status(500).json({ error: 'Failed to toggle user story score' });
     }
   }
+
+  async resetUserStoryVoting(req: Request, res: Response): Promise<void> {
+    try {
+      const { sessionId, userStoryId } = req.params;
+      const updatedUserStory = await this.userStoryService.resetUserStoryVoting(sessionId, userStoryId);
+      res.json(updatedUserStory);
+    } catch (error) {
+      console.error('Error resetting user story voting:', error);
+      res.status(500).json({ error: 'Failed to reset user story voting' });
+    }
+  }
 }

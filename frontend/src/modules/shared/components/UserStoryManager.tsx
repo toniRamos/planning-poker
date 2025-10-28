@@ -96,10 +96,22 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       ));
     };
 
+    const handleVotingReset = (data: any) => {
+      console.log('Voting reset for story:', data.userStoryId);
+      setUserStories(prev => prev.map(story => 
+        story.id === data.userStoryId ? { ...story, isRevealed: false, estimatedPoints: undefined } : story
+      ));
+      // Trigger parent refresh to update voting panel
+      if (currentStoryId === data.userStoryId) {
+        onStoryChange?.();
+      }
+    };
+
     socket.on('user-story-updated', handleUserStoryUpdated);
     socket.on('current-story-changed', handleCurrentStoryChanged);
     socket.on('story-revealed', handleStoryRevealed);
     socket.on('story-score-toggled', handleStoryScoreToggled);
+    socket.on('voting-reset', handleVotingReset);
     socket.on('role-changed', handleRoleChanged);
 
     return () => {
@@ -107,6 +119,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       socket.off('current-story-changed', handleCurrentStoryChanged);
       socket.off('story-revealed', handleStoryRevealed);
       socket.off('story-score-toggled', handleStoryScoreToggled);
+      socket.off('voting-reset', handleVotingReset);
       socket.off('role-changed', handleRoleChanged);
     };
   }, [socket, onStoryChange]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -285,6 +298,38 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
     }
   };
 
+  const resetUserStoryVoting = async (storyId: string) => {
+    if (!window.confirm('¿Estás seguro de que quieres reestimar esta historia? Se eliminarán todos los votos actuales.')) return;
+
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}/reset-voting`, {
+        method: 'PUT',
+      });
+
+      if (response.ok) {
+        const updatedUserStory = await response.json();
+        setUserStories(prev => prev.map(story => 
+          story.id === storyId ? updatedUserStory : story
+        ));
+        
+        // Emit WebSocket event to notify other users
+        if (socket) {
+          socket.emit('voting-reset', {
+            sessionId,
+            userStoryId: storyId
+          });
+        }
+
+        // If this was the current story, refresh it
+        if (currentStoryId === storyId) {
+          onStoryChange?.();
+        }
+      }
+    } catch (error) {
+      console.error('Error resetting user story voting:', error);
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index);
   };
@@ -441,6 +486,13 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                       Estimar Ahora
                     </button>
                   )}
+                  <button
+                    className="btn btn-sm btn-warning"
+                    onClick={() => resetUserStoryVoting(story.id)}
+                    title="Resetear votación y volver a estimar"
+                  >
+                    🔄 Reestimar
+                  </button>
                   <button
                     className={`btn btn-sm ${story.isScored ? 'btn-success' : 'btn-secondary'}`}
                     onClick={() => toggleUserStoryScore(story.id)}

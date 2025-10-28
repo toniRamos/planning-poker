@@ -95,15 +95,27 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       }
     };
 
+    const handleVotingReset = (data: any) => {
+      console.log('Voting reset for story:', data.userStoryId);
+      // If this is the current story, clear all votes
+      if (currentStory && currentStory.id === data.userStoryId) {
+        setVotes([]);
+        setMyVote(null);
+        setVotesRevealed(false);
+      }
+    };
+
     socket.on('vote-submitted', handleVoteSubmitted);
     socket.on('votes-revealed', handleVotesRevealed);
     socket.on('votes-cleared', handleVotesCleared);
+    socket.on('voting-reset', handleVotingReset);
     socket.on('role-changed', handleRoleChanged);
 
     return () => {
       socket.off('vote-submitted', handleVoteSubmitted);
       socket.off('votes-revealed', handleVotesRevealed);
       socket.off('votes-cleared', handleVotesCleared);
+      socket.off('voting-reset', handleVotingReset);
       socket.off('role-changed', handleRoleChanged);
     };
   }, [socket, currentStory?.id]);
