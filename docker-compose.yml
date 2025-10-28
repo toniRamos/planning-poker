@@ -1,0 +1,59 @@
+services:
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    container_name: frontend
+    volumes:
+      - ./frontend/:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    command: sh -c "npm install && npm start"
+    depends_on:
+      - node
+      - redis
+    restart: always
+
+  redis:
+    container_name: redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    restart: always
+
+  db:
+    image: mongo:7
+    container_name: db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    restart: always
+    volumes:
+      - db_data:/data/db
+
+  node:
+    image: node:22
+    container_name: api
+    working_dir: /app
+    depends_on:
+      - db
+      - redis
+    entrypoint: /app/entrypoint.sh
+    volumes:
+      - ./api:/app/
+    ports:
+      - "3001:3000"
+    restart: always
+    environment:
+      MONGO_USERNAME: root
+      MONGO_PASSWORD: password
+      SWAGGER_HOST_PORT: 3001
+
+volumes:
+  db_data:
