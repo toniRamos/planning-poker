@@ -35,7 +35,7 @@ interface VotingPanelProps {
 }
 
 const CARD_VALUES = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
-const REACTION_EMOJIS = ['💩', '💪', '👀', '💔', '💯', '🙊', '🙉', '🙈', '🤬', '😍', '🔪', '🍆', '👍', '👎'];
+const REACTION_EMOJIS = ['💩', '👀', '💔', '💯',  '😍', '🔪', '🍆', '👍', '👎'];
 
 // Función utilitaria para obtener la clase de color según el valor de la carta
 const getCardValueClass = (value: string): string => {
