@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header, JoinForm } from './';
 import UsersList from './UsersList';
-import UserInfo from './UserInfo';
+
 import { UserStoryManager } from '../modules/shared/components/UserStoryManager';
 import { VotingPanel } from '../modules/shared/components/VotingPanel';
 import { useSocket } from '../modules/shared/hooks';
@@ -45,6 +45,8 @@ const SessionView: React.FC = () => {
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [roleChangeNotification, setRoleChangeNotification] = useState<string | null>(null);
   const [showUsersPanel, setShowUsersPanel] = useState(false);
+  const [showChangeNameModal, setShowChangeNameModal] = useState(false);
+  const [newName, setNewName] = useState('');
   
   // Konami Code state for admin override
   const [konamiSequence, setKonamiSequence] = useState<string[]>([]);
@@ -273,6 +275,25 @@ const SessionView: React.FC = () => {
     }
   };
 
+  // Handle name change modal
+  const handleOpenChangeNameModal = () => {
+    setNewName(currentUser?.name || '');
+    setShowChangeNameModal(true);
+  };
+
+  const handleCloseChangeNameModal = () => {
+    setShowChangeNameModal(false);
+    setNewName('');
+  };
+
+  const handleSubmitNameChange = () => {
+    if (!newName.trim()) return;
+    
+    updateName(newName.trim());
+    setShowChangeNameModal(false);
+    setNewName('');
+  };
+
   if (loading) {
     return (
       <div className="session-view-loading">
@@ -325,9 +346,62 @@ const SessionView: React.FC = () => {
         isConnected={isConnected}
         totalUsers={totalUsers}
         sessionName={session.name}
+        currentUserName={currentUser?.name}
         onToggleUsersPanel={() => setShowUsersPanel(!showUsersPanel)}
         showUsersPanel={showUsersPanel}
+        onChangeName={handleOpenChangeNameModal}
       />
+
+      {/* Change Name Modal */}
+      {showChangeNameModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Change Your Name</h3>
+              <button 
+                className="close-btn"
+                onClick={handleCloseChangeNameModal}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Enter your new name"
+                className="name-input"
+                maxLength={50}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSubmitNameChange();
+                  }
+                  if (e.key === 'Escape') {
+                    handleCloseChangeNameModal();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary"
+                onClick={handleCloseChangeNameModal}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={handleSubmitNameChange}
+                disabled={!newName.trim()}
+              >
+                Change Name
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <main className="session-main">
         {!currentUser ? (
@@ -406,14 +480,6 @@ const SessionView: React.FC = () => {
                 {/* User Sidebar */}
                 <div className={`user-sidebar ${showUsersPanel ? 'open' : ''}`}>
                   <div className="sidebar-content">
-                    <UserInfo 
-                      currentUser={currentUser} 
-                      onUpdateName={(newName) => {
-                        if (socket) {
-                          socket.emit('update-name', { sessionId, newName });
-                        }
-                      }}
-                    />
                     <UsersList 
                       users={users} 
                       totalUsers={totalUsers}

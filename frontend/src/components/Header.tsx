@@ -4,16 +4,20 @@ interface HeaderProps {
   isConnected: boolean;
   totalUsers: number;
   sessionName?: string;
+  currentUserName?: string;
   onToggleUsersPanel?: () => void;
   showUsersPanel?: boolean;
+  onChangeName?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   isConnected, 
   totalUsers, 
   sessionName, 
+  currentUserName,
   onToggleUsersPanel,
-  showUsersPanel 
+  showUsersPanel,
+  onChangeName
 }) => {
   return (
     <header className="app-header">
@@ -33,6 +37,18 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
       <div className="connection-status">
+        {currentUserName && (
+          <div className="welcome-section">
+            <span className="welcome-message">Welcome, {currentUserName}</span>
+            <button 
+              className="settings-btn" 
+              onClick={onChangeName}
+              title="Change name"
+            >
+              ⚙️
+            </button>
+          </div>
+        )}
         <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
           {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
         </span>

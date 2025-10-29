@@ -381,12 +381,12 @@
 /* User Sidebar Styles - Always visible on right side */
 .user-sidebar {
   position: fixed;
-  top: 70px;
+  top: 110px;
   right: 0;
   width: 280px;
-  height: calc(100vh - 70px);
-  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
-  box-shadow: -2px 0 20px rgba(0, 0, 0, 0.15);
+  height: calc(100vh - 90px);
+  background: transparent;
+  box-shadow: none;
   z-index: 1000;
   overflow-y: auto;
   overflow-x: hidden;

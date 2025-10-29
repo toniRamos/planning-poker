@@ -592,7 +592,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
           {votes.length} vote{votes.length !== 1 ? 's' : ''} submitted
           {!votesRevealed && votes.length > 0 && (
             <div className="voters-list">
-              <small>Han votado: {votes.map(vote => vote.userName?.trim() || 'Usuario').join(', ')}</small>
+              <small>Voted: {votes.map(vote => vote.userName?.trim() || 'Usuario').join(', ')}</small>
             </div>
           )}
         </div>

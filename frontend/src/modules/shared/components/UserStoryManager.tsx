@@ -248,7 +248,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   };
 
   const deleteUserStory = async (storyId: string) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar esta historia?')) return;
+    if (!window.confirm('Are you sure you want to delete this story?')) return;
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}`, {
@@ -297,7 +297,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   };
 
   const resetUserStoryVoting = async (storyId: string) => {
-    if (!window.confirm('¿Estás seguro de que quieres reestimar esta historia? Se eliminarán todos los votos actuales.')) return;
+    if (!window.confirm('Are you sure you want to re-estimate this story? All current votes will be deleted.')) return;
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}/reset-voting`, {
@@ -354,23 +354,15 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   return (
     <div className="user-story-manager">
       <div className="story-header">
-        <h3>Historias de Usuario ({userStories.length})</h3>
+        <h3>User storys ({userStories.length})</h3>
         {isCreator && (
           <div className="story-actions">
             <button 
               className="btn btn-primary"
               onClick={() => setShowAddForm(true)}
             >
-              + Agregar Historia
+              + Add Story
             </button>
-            {currentStoryId && (
-              <button 
-                className="btn btn-secondary"
-                onClick={revealCurrentStory}
-              >
-                Revelar Estimaciones
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -378,7 +370,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       {showAddForm && (
         <div className="add-story-form">
           <div className="form-group">
-            <label>URL de la Historia *</label>
+            <label>User Story URL *</label>
             <input
               type="text"
               value={newStory.title}
@@ -393,7 +385,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
               onClick={addUserStory}
               disabled={isLoading || !newStory.title.trim()}
             >
-              {isLoading ? 'Agregando...' : 'Agregar Historia'}
+              {isLoading ? 'Adding...' : 'Add Story'}
             </button>
             <button 
               className="btn btn-secondary"
@@ -402,7 +394,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                 setNewStory({ title: '' });
               }}
             >
-              Cancelar
+              Cancel
             </button>
           </div>
         </div>
@@ -411,9 +403,9 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       <div className="stories-list">
         {userStories.length === 0 ? (
           <div className="empty-state">
-            <p>No hay historias de usuario aún.</p>
+            <p>No user stories yet.</p>
             {isCreator && (
-              <p>Agrega historias para empezar a estimar.</p>
+              <p>Add stories to start estimating.</p>
             )}
           </div>
         ) : (
@@ -438,7 +430,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     {story.title}
                   </a>
                   {currentStoryId === story.id && (
-                    <span className="current-badge">Actual</span>
+                    <span className="current-badge">Current</span>
                   )}
                   {story.isScored && (
                     <span className="scored-badge">✅ Puntuada</span>
@@ -468,21 +460,21 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                       onClick={() => resetUserStoryVoting(story.id)}
                       title="Resetear votación y volver a estimar"
                     >
-                      🔄 Reestimar
+                      🔄 Re-estimate
                     </button>
                   )}
                   <button
                     className={`btn btn-sm ${story.isScored ? 'btn-success' : 'btn-secondary'}`}
                     onClick={() => toggleUserStoryScore(story.id)}
-                    title={story.isScored ? 'Marcar como no puntuada' : 'Marcar como puntuada'}
+                    title={story.isScored ? 'Mark as not scored' : 'Mark as scored'}
                   >
-                    {story.isScored ? '✅ Puntuada' : '⚪ Marcar'}
+                    {story.isScored ? '✅ Scored' : '⚪ Mark'}
                   </button>
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => deleteUserStory(story.id)}
                   >
-                    Eliminar
+                    Delete
                   </button>
                 </div>
               )}

@@ -18,7 +18,7 @@ export interface SocketEvents {
   'user-joined': (data: { user: ConnectedUser; message: string }) => void;
   'user-left': (data: { user: ConnectedUser; message: string }) => void;
   'user-name-changed': (data: { oldName: string; newName: string; message: string }) => void;
-  'name-updated': (data: { user: ConnectedUser; message: string }) => void;
+  'user-name-updated': (data: { users: ConnectedUser[]; updatedUser: { userId: string; userName: string } }) => void;
   error: (data: { message: string }) => void;
 }
 
@@ -130,9 +130,17 @@ export const useSocket = (sessionId?: string): UseSocketReturn => {
       addMessage(data.message, 'info');
     });
 
-    socket.on('name-updated', (data) => {
-      setCurrentUser(data.user);
-      addMessage(data.message, 'success');
+    socket.on('user-name-updated', (data) => {
+      // Update all users list
+      setUsers(data.users);
+      
+      // Update current user if it's the one that changed
+      setCurrentUser(prev => {
+        if (prev && data.updatedUser && prev.id === data.updatedUser.userId) {
+          return { ...prev, name: data.updatedUser.userName };
+        }
+        return prev;
+      });
     });
 
     socket.on('error', (data) => {

@@ -59,44 +59,33 @@ const UsersList: React.FC<UsersListProps> = ({
 
   return (
     <div className="users-section">
-      <h3>Connected Users ({totalUsers})</h3>
+      <h3>Users ({totalUsers})</h3>
       <div className="users-list">
         {users.map((user) => (
-          <div key={user.id} className={`user-card ${user.id === currentUserId ? 'current-user' : ''}`}>
-            <div className="user-info">
-              <div className="user-header">
-                <span className="user-name">{user.name}</span>
-                {user.id === currentUserId && <span className="you-badge">You</span>}
-              </div>
-              
-              <div className="user-role">
-                <span 
-                  className="role-badge" 
-                  style={{ backgroundColor: getRoleColor(user.role) }}
-                >
-                  {getRoleIcon(user.role)} {user.role || 'player'}
-                </span>
-              </div>
-
-              {isAdmin && user.id !== currentUserId && (
-                <div className="role-controls">
-                  <select 
-                    value={user.role || UserRole.PLAYER}
-                    onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
-                    disabled={changingRole === user.id}
-                    className="role-selector"
-                  >
-                    <option value={UserRole.ADMIN}>👑 Admin</option>
-                    <option value={UserRole.PLAYER}>🎯 Player</option>
-                    <option value={UserRole.VIEWER}>👁️ Viewer</option>
-                  </select>
-                </div>
-              )}
-              
-              <span className="connection-time">
-                Connected: {new Date(user.connectedAt).toLocaleTimeString()}
-              </span>
-            </div>
+          <div key={user.id} className={`user-item ${user.id === currentUserId ? 'current-user' : ''}`}>
+            <span className="user-name">
+              {user.name}
+              {user.id === currentUserId && <span className="you-indicator"> (You)</span>}
+            </span>
+            <span 
+              className="user-role-simple" 
+              style={{ color: getRoleColor(user.role) }}
+            >
+              {getRoleIcon(user.role)}
+            </span>
+            
+            {isAdmin && user.id !== currentUserId && (
+              <select 
+                value={user.role || UserRole.PLAYER}
+                onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
+                disabled={changingRole === user.id}
+                className="role-selector-mini"
+              >
+                <option value={UserRole.ADMIN}>👑</option>
+                <option value={UserRole.PLAYER}>🎯</option>
+                <option value={UserRole.VIEWER}>👁️</option>
+              </select>
+            )}
           </div>
         ))}
       </div>
