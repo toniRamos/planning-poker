@@ -610,3 +610,28 @@
     opacity: 0;
   }
 }
+
+/* Auto-reveal indicator styling */
+.auto-reveal-indicator {
+  font-size: 0.8rem;
+  color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  font-weight: 500;
+  animation: pulse-green 2s ease-in-out;
+  cursor: help;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+}

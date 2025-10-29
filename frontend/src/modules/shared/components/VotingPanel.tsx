@@ -49,6 +49,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   const [myVote, setMyVote] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [votesRevealed, setVotesRevealed] = useState(false);
+  const [autoRevealed, setAutoRevealed] = useState(false);
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
   const [reactionCount, setReactionCount] = useState(0);
 
@@ -84,6 +85,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       console.log('Votes revealed:', data);
       if (data.userStoryId === currentStory?.id) {
         setVotesRevealed(true);
+        setAutoRevealed(data.autoRevealed || false);
         setVotes(data.votes);
       }
     };
@@ -92,6 +94,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       setVotes([]);
       setMyVote(null);
       setVotesRevealed(false);
+      setAutoRevealed(false);
       setSelectedCard(null); // Clear visual selection
     };    const handleRoleChanged = (data: any) => {
       console.log('User role changed:', data);
@@ -108,6 +111,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
         setVotes([]);
         setMyVote(null);
         setVotesRevealed(false);
+        setAutoRevealed(false);
       }
     };
 
@@ -262,16 +266,18 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       });
 
       if (response.ok) {
-        const vote = await response.json();
+        const result = await response.json();
         setMyVote(points);
         
-        // Emit WebSocket event
+        // Emit WebSocket event with auto-reveal information
         if (socket) {
           socket.emit('vote-submitted', {
             sessionId,
-            vote,
+            vote: result.vote || result, // Support both new and old API response
             userId: currentUser.id,
-            userName: currentUser.name
+            userName: currentUser.name,
+            shouldAutoReveal: result.shouldAutoReveal,
+            allVotes: result.allVotes
           });
         }
 
@@ -602,7 +608,14 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       {/* Results Section - ONLY shown to ALL users when votes are revealed */}
       {votesRevealed && votes.length > 0 && (
         <div className="vote-results">
-          <h4>📊 Results:</h4>
+          <h4>
+            📊 Results:
+            {autoRevealed && (
+              <span className="auto-reveal-indicator" title="Votes revealed automatically when all players voted">
+                {" "}⚡ Auto-revealed
+              </span>
+            )}
+          </h4>
           
           {/* Unified Voting Metrics */}
           <div className="voting-metrics">

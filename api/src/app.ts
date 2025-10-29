@@ -91,6 +91,9 @@ async function initializeServices() {
   voteService = new VoteService(repositories.voteRepository, repositories.sessionRepository);
   userStoryService = new UserStoryService(repositories.sessionRepository, voteService);
 
+  // Connect UserService with VoteService for auto-reveal functionality
+  voteService.setUserService(userService);
+
   // Initialize controllers
   const sessionController = new SessionController(sessionService);
   const voteController = new VoteController(voteService);
@@ -323,7 +326,7 @@ io.on('connection', (socket) => {
   });
 
   // Voting WebSocket events
-  socket.on('vote-submitted', (data: { sessionId: string; vote: any; userId: string; userName: string }) => {
+  socket.on('vote-submitted', async (data: { sessionId: string; vote: any; userId: string; userName: string; shouldAutoReveal?: boolean; allVotes?: any[] }) => {
     // Broadcast to all users in the session that a vote was submitted (without revealing the vote)
     console.log(`🗳️ Broadcasting vote-submitted for user ${data.userName} on story ${data.vote.userStoryId}`);
     io.to(data.sessionId).emit('vote-submitted', {
@@ -332,6 +335,36 @@ io.on('connection', (socket) => {
       userStoryId: data.vote.userStoryId,
       hasVoted: true
     });
+
+    // If auto-reveal is triggered, broadcast votes-revealed
+    if (data.shouldAutoReveal && data.allVotes) {
+      console.log(`🎯 Auto-revealing votes for story ${data.vote.userStoryId} - all players voted!`);
+      
+      // Calculate voting metrics
+      const numericVotes = data.allVotes
+        .map(vote => parseFloat(vote.points))
+        .filter(value => !isNaN(value));
+      
+      const average = numericVotes.length > 0 
+        ? (numericVotes.reduce((sum, val) => sum + val, 0) / numericVotes.length).toFixed(1)
+        : 0;
+      
+      // Broadcast votes revealed with auto-reveal flag
+      io.to(data.sessionId).emit('votes-revealed', {
+        userStoryId: data.vote.userStoryId,
+        votes: data.allVotes.map(vote => ({
+          userId: vote.userId,
+          userName: vote.userName,
+          value: vote.points
+        })),
+        metrics: {
+          totalVotes: data.allVotes.length,
+          average: average,
+          hasNumericVotes: numericVotes.length > 0
+        },
+        autoRevealed: true
+      });
+    }
   });
 
   socket.on('votes-revealed', (data: { sessionId: string; userStoryId: string; votes: any[] }) => {

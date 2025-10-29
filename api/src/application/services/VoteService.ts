@@ -2,12 +2,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { Vote, CreateVoteRequest } from '../../domain/entities/Vote';
 import { VoteRepository } from '../../domain/repositories/VoteRepository';
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
+import { UserService } from './UserService';
+import { UserRole } from '../../domain/entities/User';
 
 export class VoteService {
+  private userService?: UserService;
+
   constructor(
     private voteRepository: VoteRepository,
     private sessionRepository: SessionRepository
   ) {}
+
+  // Método para inyectar el UserService después de la inicialización
+  setUserService(userService: UserService): void {
+    this.userService = userService;
+  }
 
   async createOrUpdateVote(request: CreateVoteRequest): Promise<Vote> {
     // Check if session exists and is active
@@ -56,8 +65,32 @@ export class VoteService {
         updatedAt: new Date()
       };
 
-      return await this.voteRepository.create(newVote);
+        return await this.voteRepository.create(newVote);
     }
+  }
+
+  async createOrUpdateVoteWithAutoReveal(request: CreateVoteRequest): Promise<{
+    vote: Vote;
+    shouldAutoReveal: boolean;
+    allVotes?: Vote[];
+  }> {
+    // Create or update the vote
+    const vote = await this.createOrUpdateVote(request);
+    
+    // Check if all players have voted
+    const shouldAutoReveal = await this.checkAllUsersVoted(request.sessionId, request.userStoryId);
+    
+    let allVotes: Vote[] | undefined;
+    if (shouldAutoReveal) {
+      // Auto-reveal votes
+      allVotes = await this.revealVotes(request.userStoryId);
+    }
+
+    return {
+      vote,
+      shouldAutoReveal,
+      allVotes
+    };
   }
 
   async getVotesForStory(userStoryId: string): Promise<Vote[]> {
@@ -91,14 +124,24 @@ export class VoteService {
   }
 
   async checkAllUsersVoted(sessionId: string, userStoryId: string): Promise<boolean> {
-    // Get session to know active users (this would need UserService integration)
-    // For now, we'll implement a simple check based on votes count vs expected players
-    const votes = await this.voteRepository.findByUserStory(userStoryId);
+    if (!this.userService) {
+      return false;
+    }
+
+    // Get all players (not viewers or admins) in the session
+    const players = this.userService.getUsersByRole(sessionId, UserRole.PLAYER);
+    const playerUserIds = players.map(player => player.id);
     
-    // This is a simplified implementation
-    // In real scenario, we'd check against active players in the session
-    // For now, let's assume all voted if we have at least 1 vote (we'll improve this)
-    return votes.length > 0;
+    if (playerUserIds.length === 0) {
+      return false; // No players in session
+    }
+
+    // Get all votes for this story
+    const votes = await this.voteRepository.findByUserStory(userStoryId);
+    const votedUserIds = votes.map(vote => vote.userId);
+
+    // Check if all players have voted
+    return playerUserIds.every(playerId => votedUserIds.includes(playerId));
   }
 
   async getVoteStats(userStoryId: string): Promise<{

@@ -451,7 +451,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                       className="btn btn-sm btn-primary"
                       onClick={() => setCurrentStory(story.id)}
                     >
-                      Estimar Ahora
+                      Estimate now
                     </button>
                   )}
                   {currentStoryId === story.id && (

@@ -23,9 +23,13 @@ export class VoteController {
         points
       };
 
-      const vote = await this.voteService.createOrUpdateVote(voteRequest);
+      const result = await this.voteService.createOrUpdateVoteWithAutoReveal(voteRequest);
 
-      res.status(201).json(vote);
+      res.status(201).json({
+        vote: result.vote,
+        shouldAutoReveal: result.shouldAutoReveal,
+        allVotes: result.allVotes
+      });
     } catch (error) {
       console.error('Error submitting vote:', error);
       if (error instanceof Error) {
