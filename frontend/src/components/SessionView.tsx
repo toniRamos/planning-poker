@@ -445,9 +445,6 @@ const SessionView: React.FC = () => {
                 >
                   🔗 Share Session
                 </button>
-                <div className="session-id">
-                  Session ID: <code>{sessionId}</code>
-                </div>
               </div>
             </div>
 

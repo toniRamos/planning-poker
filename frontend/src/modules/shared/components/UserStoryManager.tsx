@@ -433,7 +433,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     <span className="current-badge">Current</span>
                   )}
                   {story.isScored && (
-                    <span className="scored-badge">✅ Puntuada</span>
+                    <span className="scored-badge">✅ Scored</span>
                   )}
                 </div>
                 
