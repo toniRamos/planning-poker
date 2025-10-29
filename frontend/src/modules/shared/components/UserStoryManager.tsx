@@ -462,13 +462,15 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                       Estimar Ahora
                     </button>
                   )}
-                  <button
-                    className="btn btn-sm btn-warning"
-                    onClick={() => resetUserStoryVoting(story.id)}
-                    title="Resetear votación y volver a estimar"
-                  >
-                    🔄 Reestimar
-                  </button>
+                  {currentStoryId === story.id && (
+                    <button
+                      className="btn btn-sm btn-warning"
+                      onClick={() => resetUserStoryVoting(story.id)}
+                      title="Resetear votación y volver a estimar"
+                    >
+                      🔄 Reestimar
+                    </button>
+                  )}
                   <button
                     className={`btn btn-sm ${story.isScored ? 'btn-success' : 'btn-secondary'}`}
                     onClick={() => toggleUserStoryScore(story.id)}
