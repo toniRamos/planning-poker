@@ -342,24 +342,16 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-.admin-metrics {
-  margin-top: 15px;
-  padding: 15px;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
-  border: 1px solid rgba(255, 193, 7, 0.3);
-  border-radius: 8px;
+
+
+.results-breakdown {
+  margin-top: 20px;
 }
 
-.admin-metrics .metrics-summary {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.admin-metrics .metric-item {
-  background: linear-gradient(135deg, #ffc107, #ff9800);
-  color: #212529;
+.results-breakdown h5 {
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+  color: #495057;
   font-weight: 600;
 }
 
