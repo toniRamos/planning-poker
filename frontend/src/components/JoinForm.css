@@ -1,94 +1,104 @@
 /* Role selection styles */
 .role-selection {
-  margin: 20px 0;
-  padding: 15px;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  margin: var(--spacing-6) 0;
+  padding: var(--spacing-5);
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
 }
 
 .role-selection label {
   display: block;
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: #495057;
+  margin-bottom: var(--spacing-3);
+  font-weight: var(--font-semibold);
+  color: var(--neutral-800);
+  font-size: var(--text-sm);
 }
 
 .role-options {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-3);
 }
 
 .role-option {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: var(--spacing-4);
   background: white;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .role-option:hover {
-  border-color: #007bff;
-  background-color: #f8f9ff;
+  border-color: var(--primary-500);
+  background-color: var(--primary-50);
+  box-shadow: var(--shadow-sm);
 }
 
 .role-option input[type="radio"] {
-  margin-right: 12px;
+  margin-right: var(--spacing-3);
   margin-top: 0;
   cursor: pointer;
+  accent-color: var(--primary-600);
 }
 
 .role-option input[type="radio"]:checked + .role-label {
-  color: #007bff;
+  color: var(--primary-700);
 }
 
 .role-option:has(input:checked) {
-  border-color: #007bff;
-  background-color: #f8f9ff;
+  border-color: var(--primary-500);
+  background-color: var(--primary-50);
+  box-shadow: var(--shadow-md);
 }
 
 .role-label {
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: var(--text-sm);
+  line-height: 1.5;
   cursor: pointer;
+  color: var(--neutral-700);
 }
 
 .role-label strong {
-  font-weight: 600;
+  font-weight: var(--font-semibold);
+  color: var(--neutral-900);
 }
 
 /* Join buttons */
 .join-buttons {
-  margin-top: 20px;
+  margin-top: var(--spacing-6);
   display: flex;
   justify-content: center;
 }
 
 .join-buttons button {
-  background: #007bff;
+  background: var(--primary-600);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: var(--spacing-4) var(--spacing-8);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all var(--transition-base);
   min-width: 160px;
+  box-shadow: var(--shadow-sm);
 }
 
 .join-buttons button:hover:not(:disabled) {
-  background: #0056b3;
+  background: var(--primary-700);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .join-buttons button:disabled {
-  background: #6c757d;
+  background: var(--neutral-400);
   cursor: not-allowed;
   opacity: 0.7;
+  transform: none;
 }
 
 /* Responsive design */

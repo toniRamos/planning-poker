@@ -1,7 +1,7 @@
 /* SessionView.css */
 .session-view {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: var(--neutral-50);
 }
 
 .session-view-loading,
@@ -11,14 +11,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: var(--spacing-12);
   text-align: center;
 }
 
 .loading-spinner {
-  font-size: 3rem;
+  font-size: var(--text-5xl);
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-6);
+  color: var(--primary-600);
 }
 
 @keyframes spin {
@@ -27,132 +28,140 @@
 }
 
 .session-view-loading h2 {
-  color: #2c3e50;
-  margin: 0 0 10px 0;
-  font-size: 1.8rem;
+  color: var(--neutral-900);
+  margin: 0 0 var(--spacing-3) 0;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
 }
 
 .session-view-loading p {
-  color: #6c757d;
-  font-size: 1.1rem;
+  color: var(--neutral-600);
+  font-size: var(--text-lg);
 }
 
 .error-icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
+  font-size: var(--text-5xl);
+  margin-bottom: var(--spacing-6);
+  color: var(--error);
 }
 
 .session-view-error h2 {
-  color: #dc3545;
-  margin: 0 0 10px 0;
-  font-size: 1.8rem;
+  color: var(--error);
+  margin: 0 0 var(--spacing-3) 0;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
 }
 
 .session-view-error p {
-  color: #6c757d;
-  font-size: 1.1rem;
-  margin-bottom: 30px;
+  color: var(--neutral-600);
+  font-size: var(--text-lg);
+  margin-bottom: var(--spacing-8);
 }
 
 .error-actions {
   display: flex;
-  gap: 15px;
+  gap: var(--spacing-4);
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .back-button,
 .home-button {
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: var(--spacing-4) var(--spacing-8);
+  border-radius: var(--radius-lg);
   text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: var(--font-semibold);
+  transition: all var(--transition-base);
   cursor: pointer;
   border: none;
-  font-size: 1rem;
+  font-size: var(--text-base);
+  box-shadow: var(--shadow-sm);
 }
 
 .back-button {
-  background: #6c757d;
+  background: var(--neutral-500);
   color: white;
 }
 
 .back-button:hover {
-  background: #5a6268;
-  transform: translateY(-2px);
+  background: var(--neutral-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .home-button {
-  background: #007bff;
+  background: var(--primary-600);
   color: white;
 }
 
 .home-button:hover {
-  background: #0056b3;
-  transform: translateY(-2px);
+  background: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .session-main {
   margin: 0 auto;
-  padding: 20px;
-  padding-right: 300px; /* Space for sidebar */
-  min-height: calc(100vh - 70px);
-  transition: padding-right 0.3s ease;
+  padding: var(--spacing-6);
+  padding-right: 320px; /* Space for sidebar */
+  min-height: calc(100vh - 80px);
+  transition: padding-right var(--transition-base);
 }
 
 .join-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  gap: var(--spacing-12);
   align-items: center;
   min-height: 60vh;
 }
 
 .session-info {
   background: white;
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-left: 5px solid #007bff;
+  padding: var(--spacing-12);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  border-left: 4px solid var(--primary-600);
+  border: 1px solid var(--neutral-200);
 }
 
 .session-info h2 {
-  margin: 0 0 15px 0;
-  color: #2c3e50;
-  font-size: 2.2rem;
-  font-weight: 700;
+  margin: 0 0 var(--spacing-4) 0;
+  color: var(--neutral-900);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.025em;
 }
 
 .session-description {
-  color: #6c757d;
-  font-size: 1.1rem;
+  color: var(--neutral-600);
+  font-size: var(--text-lg);
   line-height: 1.6;
-  margin-bottom: 25px;
+  margin-bottom: var(--spacing-8);
 }
 
 .session-meta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .session-meta span {
-  color: #495057;
-  font-size: 0.9rem;
+  color: var(--neutral-700);
+  font-size: var(--text-sm);
   display: flex;
   align-items: center;
 }
 
 .session-meta span::before {
   content: '•';
-  margin-right: 8px;
-  color: #007bff;
+  margin-right: var(--spacing-2);
+  color: var(--primary-600);
   font-weight: bold;
 }
 
 .session-creator {
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .session-header {
