@@ -46,6 +46,10 @@ const SessionView: React.FC = () => {
   const [roleChangeNotification, setRoleChangeNotification] = useState<string | null>(null);
   const [showUsersPanel, setShowUsersPanel] = useState(false);
   
+  // Konami Code state for admin override
+  const [konamiSequence, setKonamiSequence] = useState<string[]>([]);
+  const konamiCode = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  
   // Check if user is creator (from URL params)
   const urlParams = new URLSearchParams(window.location.search);
   const creatorName = urlParams.get('creator');
@@ -154,6 +158,86 @@ const SessionView: React.FC = () => {
       socket.off('role-change-success', handleRoleChangeSuccess);
     };
   }, [socket, refreshSession]);
+
+  // Konami Code listener for admin override
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      try {
+        // Validate event and key property
+        if (!event || !event.key || typeof event.key !== 'string') {
+          console.warn('Invalid key event:', event);
+          return;
+        }
+
+        // Only listen for arrow keys
+        if (!event.key.startsWith('Arrow')) {
+          setKonamiSequence([]); // Reset sequence on non-arrow key
+          return;
+        }
+
+        console.log('Arrow key pressed:', event.key); // Debug log
+
+        setKonamiSequence(prev => {
+          const newSequence = [...prev, event.key];
+          
+          // Keep only the last 8 keys (length of konami code)
+          if (newSequence.length > konamiCode.length) {
+            newSequence.shift();
+          }
+          
+          // Check if sequence matches konami code
+          if (newSequence.length === konamiCode.length) {
+            const matches = newSequence.every((key, index) => key === konamiCode[index]);
+            
+            console.log('Checking sequence:', newSequence, 'vs', konamiCode);
+            
+            if (matches) {
+              console.log('🎮 Konami Code activated! Promoting to admin...');
+              promoteToAdmin();
+              return []; // Reset sequence after activation
+            }
+          }
+          
+          return newSequence;
+        });
+      } catch (error) {
+        console.error('Error in Konami Code handler:', error);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentUser, socket, sessionId]);
+
+  // Function to promote current user to admin
+  const promoteToAdmin = () => {
+    if (!currentUser || !socket || !sessionId) {
+      console.warn('Cannot promote to admin: missing requirements');
+      return;
+    }
+
+    if (currentUser.role === UserRole.ADMIN) {
+      console.log('User is already admin');
+      setRoleChangeNotification('🎮 You are already an admin!');
+      setTimeout(() => setRoleChangeNotification(null), 3000);
+      return;
+    }
+
+    console.log('🎮 Promoting user to admin via Konami Code');
+    
+    // Emit admin promotion request
+    socket.emit('konami-admin-promotion', {
+      sessionId,
+      userId: currentUser.id,
+      userName: currentUser.name
+    });
+
+    setRoleChangeNotification('🎮 Konami Code activated! You are now admin! 👑');
+    setTimeout(() => setRoleChangeNotification(null), 5000);
+  };
 
   // Function to handle sharing session URL
   const handleShareSession = async () => {

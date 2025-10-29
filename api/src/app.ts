@@ -328,6 +328,40 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Konami Code admin promotion (secret override for orphaned sessions)
+  socket.on('konami-admin-promotion', (data: { sessionId: string; userId: string; userName: string }) => {
+    console.log(`🎮 KONAMI CODE ACTIVATED! Promoting ${data.userName} to admin in session ${data.sessionId}`);
+    
+    try {
+      // Change user role to admin using socket.id
+      const user = userService.changeUserRole(socket.id, UserRole.ADMIN);
+      
+      if (user) {
+        // Notify all users about the role change
+        const updatedUsers = userService.getSessionUsers(data.sessionId);
+        io.to(data.sessionId).emit('users-updated', {
+          users: updatedUsers,
+          totalUsers: updatedUsers.length
+        });
+
+        // Send success confirmation to the promoted user
+        socket.emit('role-change-success', {
+          user: user,
+          message: `🎮 Konami Code activated! You are now Admin! 👑`
+        });
+
+        // Notify other users about the promotion
+        socket.to(data.sessionId).emit('user-joined', {
+          user: user,
+          message: `🎮 ${data.userName} used the Konami Code and became Admin! 👑`
+        });
+      }
+    } catch (error) {
+      console.error('Error promoting user to admin via Konami Code:', error);
+      socket.emit('error', { message: 'Failed to promote to admin' });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('👋 User disconnected from WebSocket');
     
