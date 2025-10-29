@@ -35,6 +35,7 @@ interface VotingPanelProps {
 }
 
 const CARD_VALUES = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
+const REACTION_EMOJIS = ['💩', '💪', '👀', '💔', '💯', '🙊', '🙉', '🙈', '🤬', '😍'];
 
 export const VotingPanel: React.FC<VotingPanelProps> = ({
   sessionId,
@@ -48,8 +49,11 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   const [myVote, setMyVote] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [votesRevealed, setVotesRevealed] = useState(false);
+  const [reactionsEnabled, setReactionsEnabled] = useState(true);
+  const [reactionCount, setReactionCount] = useState(0);
   const cardsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
+  const reactionCountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (currentStory) {
@@ -106,11 +110,24 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       }
     };
 
+    const handleReactionSent = (data: { emoji: string; userName: string }) => {
+      console.log('Received reaction from', data.userName, ':', data.emoji);
+      if (reactionsEnabled) {
+        createFallingEmoji(data.emoji);
+      }
+    };
+
+    const handleReactionsToggled = (data: { enabled: boolean }) => {
+      setReactionsEnabled(data.enabled);
+    };
+
     socket.on('vote-submitted', handleVoteSubmitted);
     socket.on('votes-revealed', handleVotesRevealed);
     socket.on('votes-cleared', handleVotesCleared);
     socket.on('voting-reset', handleVotingReset);
     socket.on('role-changed', handleRoleChanged);
+    socket.on('reaction-sent', handleReactionSent);
+    socket.on('reactions-toggled', handleReactionsToggled);
 
     return () => {
       socket.off('vote-submitted', handleVoteSubmitted);
@@ -118,6 +135,8 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       socket.off('votes-cleared', handleVotesCleared);
       socket.off('voting-reset', handleVotingReset);
       socket.off('role-changed', handleRoleChanged);
+      socket.off('reaction-sent', handleReactionSent);
+      socket.off('reactions-toggled', handleReactionsToggled);
     };
   }, [socket, currentStory?.id]);
 
@@ -320,6 +339,77 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
     }
   };
 
+  const createFallingEmoji = (emoji: string) => {
+    console.log('Creating falling emoji:', emoji);
+    
+    // Use body or main container to cover full screen
+    const container = document.body;
+    if (!container) {
+      console.warn('Body container not found');
+      return;
+    }
+
+    const emojiElement = document.createElement('div');
+    emojiElement.textContent = emoji;
+    emojiElement.className = 'falling-emoji-fullscreen';
+    
+    // Random horizontal position across full screen width
+    const randomX = Math.random() * (window.innerWidth - 50);
+    emojiElement.style.left = `${randomX}px`;
+    
+    container.appendChild(emojiElement);
+    console.log('Emoji added to body, starting fullscreen animation');
+
+    // Remove after animation completes
+    setTimeout(() => {
+      if (emojiElement.parentNode) {
+        emojiElement.parentNode.removeChild(emojiElement);
+        console.log('Emoji removed after fullscreen animation');
+      }
+    }, 4000);
+  };
+
+  const sendReaction = (emoji: string) => {
+    if (!currentUser || !socket || !reactionsEnabled) return;
+
+    console.log('Sending reaction:', emoji);
+
+    // Create local falling animation immediately
+    createFallingEmoji(emoji);
+
+    // Update reaction counter with visual feedback
+    setReactionCount(prev => prev + 1);
+    
+    // Reset counter after 3 seconds
+    if (reactionCountTimeoutRef.current) {
+      clearTimeout(reactionCountTimeoutRef.current);
+    }
+    reactionCountTimeoutRef.current = setTimeout(() => {
+      setReactionCount(0);
+    }, 3000);
+
+    // Emit WebSocket event to others
+    socket.emit('reaction-sent', {
+      sessionId,
+      emoji,
+      userId: currentUser.id,
+      userName: currentUser.name
+    });
+  };
+
+  const toggleReactions = () => {
+    if (!isCreator || !socket) return;
+
+    const newState = !reactionsEnabled;
+    setReactionsEnabled(newState);
+
+    // Emit WebSocket event
+    socket.emit('reactions-toggled', {
+      sessionId,
+      enabled: newState
+    });
+  };
+
   if (!currentStory) {
     return (
       <div className="voting-panel">
@@ -328,6 +418,54 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
           <p>No story selected for estimation.</p>
           <p>The session creator needs to select a story to start voting.</p>
         </div>
+
+        {/* Reactions Section - Always available */}
+        {!currentUser?.isSpectator && reactionsEnabled && (
+          <div className="reactions-section">
+            <div className="reactions-header">
+              <h4>React to the session:</h4>
+              {reactionCount > 0 && (
+                <div className="reaction-counter">
+                  +{reactionCount} 🎉
+                </div>
+              )}
+            </div>
+            <div className="reaction-emojis">
+              {REACTION_EMOJIS.map((emoji, index) => (
+                <button
+                  key={index}
+                  className="reaction-emoji"
+                  onClick={(e) => {
+                    // Visual feedback on click
+                    const button = e.currentTarget;
+                    button.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                      button.style.transform = '';
+                    }, 150);
+                    
+                    sendReaction(emoji);
+                  }}
+                  title={`Send ${emoji} reaction - Click multiple times for more!`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Admin Controls - Always available */}
+        {isCreator && (
+          <div className="admin-controls">
+            <button
+              className={`btn btn-sm ${reactionsEnabled ? 'btn-warning' : 'btn-success'}`}
+              onClick={toggleReactions}
+              title={reactionsEnabled ? 'Disable reactions' : 'Enable reactions'}
+            >
+              {reactionsEnabled ? '🙊 Disable Reactions' : '😍 Enable Reactions'}
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -371,6 +509,54 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
               ✅ Your vote: <span className="vote-value">{myVote}</span>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Reactions Section */}
+      {!currentUser?.isSpectator && reactionsEnabled && (
+        <div className="reactions-section">
+          <div className="reactions-header">
+            <h4>React to the session:</h4>
+            {reactionCount > 0 && (
+              <div className="reaction-counter">
+                +{reactionCount} 🎉
+              </div>
+            )}
+          </div>
+          <div className="reaction-emojis">
+            {REACTION_EMOJIS.map((emoji, index) => (
+              <button
+                key={index}
+                className="reaction-emoji"
+                onClick={(e) => {
+                  // Visual feedback on click
+                  const button = e.currentTarget;
+                  button.style.transform = 'scale(0.8)';
+                  setTimeout(() => {
+                    button.style.transform = '';
+                  }, 150);
+                  
+                  sendReaction(emoji);
+                }}
+                title={`Send ${emoji} reaction - Click multiple times for more!`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Admin Controls */}
+      {isCreator && (
+        <div className="admin-controls">
+          <button
+            className={`btn btn-sm ${reactionsEnabled ? 'btn-warning' : 'btn-success'}`}
+            onClick={toggleReactions}
+            title={reactionsEnabled ? 'Disable reactions' : 'Enable reactions'}
+          >
+            {reactionsEnabled ? '🙊 Disable Reactions' : '😍 Enable Reactions'}
+          </button>
         </div>
       )}
 

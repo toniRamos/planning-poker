@@ -409,3 +409,163 @@
   color: #0056b3;
   font-size: 0.9rem;
 }
+
+/* Reactions Section */
+.reactions-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  text-align: center;
+}
+
+.reactions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.reactions-section h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.reaction-counter {
+  background: linear-gradient(45deg, #ff6b6b, #feca57);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: bounceIn 0.3s ease-out;
+  min-width: 40px;
+  text-align: center;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.reaction-emojis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.reaction-emoji {
+  background: white;
+  border: 2px solid #dee2e6;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reaction-emoji:hover {
+  transform: scale(1.1);
+  border-color: #007bff;
+  background: #f8f9ff;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+.reaction-emoji:active {
+  transform: scale(0.8);
+}
+
+.reaction-emoji {
+  transition: all 0.15s ease;
+}
+
+.reaction-emoji:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Admin Controls */
+.admin-controls {
+  margin: 15px 0;
+  text-align: center;
+  padding: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+}
+
+.admin-controls .btn {
+  margin: 0 5px;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
+/* Falling emoji animation container */
+.voting-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 200px; /* Ensure minimum height for animations */
+}
+
+/* Falling emoji animation */
+.falling-emoji {
+  position: absolute;
+  top: -50px;
+  font-size: 2rem;
+  z-index: 9999;
+  pointer-events: none;
+  user-select: none;
+  animation: fall 4s ease-in forwards;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-50px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(100vh)) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Fullscreen falling emoji animation */
+.falling-emoji-fullscreen {
+  position: fixed;
+  top: -50px;
+  font-size: 2rem;
+  z-index: 10000;
+  pointer-events: none;
+  user-select: none;
+  animation: fallFullscreen 4s ease-in forwards;
+}
+
+@keyframes fallFullscreen {
+  0% {
+    transform: translateY(-50px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(100vh + 50px)) rotate(360deg);
+    opacity: 0;
+  }
+}

@@ -145,11 +145,17 @@ io.on('connection', (socket) => {
           message: `Welcome to the session! You are now connected as ${user.role === UserRole.ADMIN ? 'Admin 👑' : user.role}`
         });
         
-        // Notify all users in the session about the new user
+        // Notify all users in the session about the updated user list
         const updatedUsers = userService.getSessionUsers(data.sessionId);
-        io.to(data.sessionId).emit('user-joined', {
+        io.to(data.sessionId).emit('users-updated', {
           users: updatedUsers,
-          newUser: { userId: user.id, userName: user.name, role: user.role }
+          totalUsers: updatedUsers.length
+        });
+        
+        // Also send user-joined event for notifications
+        io.to(data.sessionId).emit('user-joined', {
+          user: user,
+          message: `${user.name} joined as ${user.role === UserRole.ADMIN ? 'Admin 👑' : user.role}`
         });
       }
     } catch (error) {
@@ -163,11 +169,18 @@ io.on('connection', (socket) => {
       socket.leave(data.sessionId);      
       const removedUser = userService.removeUser(socket.id);
       
-      // Notify remaining users about the user leaving
+      // Notify remaining users about the updated user list
       const updatedUsers = userService.getSessionUsers(data.sessionId);
-      socket.to(data.sessionId).emit('user-left', {
+      socket.to(data.sessionId).emit('users-updated', {
         users: updatedUsers,
-        leftUser: removedUser ? { userId: removedUser.id, userName: removedUser.name } : { userId: data.userId, userName: data.userName }
+        totalUsers: updatedUsers.length
+      });
+      
+      // Also send user-left event for notifications
+      const leftUser = removedUser ? { userId: removedUser.id, userName: removedUser.name } : { userId: data.userId, userName: data.userName };
+      socket.to(data.sessionId).emit('user-left', {
+        user: leftUser,
+        message: `${leftUser.userName} left the session`
       });
     } catch (error) {
       console.error('Error in leave-session:', error);
@@ -295,6 +308,26 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Reaction events
+  socket.on('reaction-sent', (data: { sessionId: string; emoji: string; userId: string; userName: string }) => {
+    console.log(`😊 User ${data.userName} sent reaction ${data.emoji} in session ${data.sessionId}`);
+    
+    // Broadcast the reaction to all other users in the session (not the sender)
+    socket.to(data.sessionId).emit('reaction-sent', {
+      emoji: data.emoji,
+      userName: data.userName
+    });
+  });
+
+  socket.on('reactions-toggled', (data: { sessionId: string; enabled: boolean }) => {
+    console.log(`🎭 Reactions ${data.enabled ? 'enabled' : 'disabled'} in session ${data.sessionId}`);
+    
+    // Broadcast the reactions toggle to all users in the session
+    io.to(data.sessionId).emit('reactions-toggled', {
+      enabled: data.enabled
+    });
+  });
+
   socket.on('disconnect', () => {
     console.log('👋 User disconnected from WebSocket');
     
@@ -302,11 +335,17 @@ io.on('connection', (socket) => {
       const removedUser = userService.removeUser(socket.id);
       
       if (removedUser) {
-        // Notify remaining users about the user leaving
+        // Notify remaining users about the updated user list
         const updatedUsers = userService.getSessionUsers(removedUser.sessionId);
-        socket.to(removedUser.sessionId).emit('user-left', {
+        socket.to(removedUser.sessionId).emit('users-updated', {
           users: updatedUsers,
-          leftUser: { userId: removedUser.id, userName: removedUser.name }
+          totalUsers: updatedUsers.length
+        });
+        
+        // Also send user-left event for notifications
+        socket.to(removedUser.sessionId).emit('user-left', {
+          user: { userId: removedUser.id, userName: removedUser.name },
+          message: `${removedUser.name} disconnected`
         });
       }
     } catch (error) {
