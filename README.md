@@ -1,26 +1,38 @@
 # 🃏 Planning Poker
 
-A real-time collaborative Planning Poker application built with React, Node.js, TypeScript, and Socket.IO. This application enables teams to conduct agile estimation sessions with real-time user interaction and seamless WebSocket communication.
+A complete real-time collaborative Planning Poker application built with React, Node.js, TypeScript, Socket.IO, and MongoDB. This production-ready application enables agile teams to conduct efficient estimation sessions with comprehensive features for session management, voting, and real-time collaboration.
 
 ## 🚀 Features
 
-### ✨ Real-time Collaboration
-- **Live User Management**: See who's online in real-time
-- **Instant Updates**: Real-time user join/leave notifications
-- **Activity Feed**: Live activity stream showing all session events
-- **Name Changes**: Update your display name on the fly
+### 🎯 Complete Planning Poker Experience
+- **🃏 Fibonacci Voting**: Standard planning poker cards (0, 1, 2, 3, 5, 8, 13, 21, ?, ∞, ☕)
+- **📊 Real-time Voting**: Live vote submission and status tracking
+- **🔍 Vote Revelation**: Admin-controlled vote reveal with comprehensive metrics
+- **📈 Voting Analytics**: Total votes, averages, and detailed distribution
+- **🔄 Re-estimation**: Reset voting for new rounds
+- **👥 Role-based Access**: Admin, Player, and Viewer roles
 
-### 🎯 User Experience
-- **Clean Interface**: Modern, responsive design with intuitive navigation
-- **Connection Status**: Visual indicators for WebSocket connectivity
-- **User Count**: Real-time participant counter
-- **Mobile Friendly**: Responsive design for all screen sizes
+### 🎮 Session Management
+- **📝 Story Management**: Create, edit, and manage user stories
+- **⚡ Live Sessions**: Real-time session updates and synchronization  
+- **👑 Admin Controls**: Session administration with role management
+- **🎭 Role Assignment**: Dynamic role changes during sessions
+- **🎊 Interactive Elements**: Emoji reactions with falling animations
+
+### ✨ Advanced User Experience
+- **🔄 Real-time Synchronization**: Live updates across all participants
+- **📱 Responsive Design**: Mobile-first design with elegant UI
+- **🎨 Modern Interface**: Clean, professional design with smooth animations
+- **🔐 Konami Code**: Hidden admin override for orphaned sessions
+- **👥 Role-based UI**: Different interfaces for Admins, Players, and Viewers
+- **📊 Voting Status Indicators**: Visual feedback for voting progress
 
 ### 🏗️ Technical Excellence
 - **TypeScript**: Full type safety across frontend and backend
-- **Component Architecture**: Modular, reusable React components
+- **MongoDB Integration**: Persistent data storage with Repository pattern
 - **WebSocket Communication**: Real-time bidirectional communication
-- **Docker Ready**: Complete containerization with Docker Compose
+- **Docker Production Ready**: Complete containerization with multi-service orchestration
+- **Repository Pattern**: Clean architecture with In-Memory and MongoDB implementations
 
 ## 🛠️ Tech Stack
 
@@ -33,17 +45,19 @@ A real-time collaborative Planning Poker application built with React, Node.js, 
 
 ### Backend
 - **Node.js** with Express.js
-- **TypeScript** for type safety
-- **Socket.IO** for WebSocket communication
-- **MongoDB** for data persistence
-- **Swagger/OpenAPI** for API documentation
-- **Docker** for containerization
+- **TypeScript** for type safety and robust development
+- **Socket.IO** for real-time WebSocket communication
+- **MongoDB 7** with indexes for production-grade persistence
+- **Repository Factory Pattern** with environment-based selection
+- **Swagger/OpenAPI** for comprehensive API documentation
+- **Docker** for containerization and deployment
 
 ### Infrastructure
 - **Docker Compose** for multi-service orchestration
-- **Redis** for session management
-- **MongoDB 7** for database
-- **Nginx-ready** architecture
+- **Redis** for session and cache management  
+- **MongoDB 7** with optimized collections and indexes
+- **Production Architecture** ready for scaling
+- **Health Checks** and monitoring endpoints
 
 ## 📁 Project Structure
 
@@ -51,38 +65,48 @@ A real-time collaborative Planning Poker application built with React, Node.js, 
 planning-poker/
 ├── 📁 api/                          # Backend API
 │   ├── 📁 src/
-│   │   ├── 📄 app.ts                # Main application entry
+│   │   ├── 📄 app.ts                # Main application with WebSocket handlers
 │   │   ├── 📁 application/
-│   │   │   ├── 📁 controllers/      # Route controllers
-│   │   │   ├── 📁 routes/           # API routes
-│   │   │   └── 📁 services/         # Business logic
-│   │   │       └── UserService.ts   # Real-time user management
-│   │   ├── 📁 domain/               # Domain entities
+│   │   │   ├── 📁 controllers/      # REST API controllers
+│   │   │   │   ├── SessionController.ts    # Session management
+│   │   │   │   ├── UserStoryController.ts  # Story operations
+│   │   │   │   └── VoteController.ts       # Voting logic
+│   │   │   ├── 📁 routes/           # API route definitions
+│   │   │   └── 📁 services/         # Business logic services
+│   │   │       ├── UserService.ts   # Real-time user management
+│   │   │       ├── SessionService.ts # Session orchestration
+│   │   │       ├── UserStoryService.ts # Story management
+│   │   │       └── VoteService.ts    # Voting business logic
+│   │   ├── 📁 domain/               # Domain layer
 │   │   │   ├── 📁 entities/         # Business entities
-│   │   │   └── 📁 repositories/     # Data access interfaces
+│   │   │   │   ├── User.ts          # User domain model
+│   │   │   │   ├── Session.ts       # Session domain model
+│   │   │   │   ├── UserStory.ts     # Story domain model
+│   │   │   │   └── Vote.ts          # Vote domain model
+│   │   │   └── 📁 repositories/     # Repository interfaces
 │   │   └── 📁 infrastructure/       # Infrastructure layer
-│   │       └── 📁 database/
-│   │           └── MongoConnection.ts # Database connection
-│   ├── 📄 package.json
-│   ├── 📄 tsconfig.json
-│   └── 📄 entrypoint.sh
+│   │       ├── 📁 database/
+│   │       │   └── MongoConnection.ts # MongoDB connection
+│   │       └── � repositories/     # Repository implementations
+│   │           ├── InMemoryRepositories.ts  # In-memory implementations
+│   │           ├── MongoRepositories.ts     # MongoDB implementations
+│   │           └── RepositoryFactory.ts     # Factory pattern
 ├── 📁 frontend/                     # React frontend
 │   ├── 📁 src/
-│   │   ├── 📄 App.tsx               # Main app component
-│   │   ├── 📁 components/           # Reusable UI components
-│   │   │   ├── 📄 Header.tsx        # App header with status
-│   │   │   ├── 📄 JoinForm.tsx      # User join form
-│   │   │   ├── 📄 UserInfo.tsx      # Current user info
-│   │   │   ├── 📄 UsersList.tsx     # Connected users list
-│   │   │   ├── 📄 ActivityFeed.tsx  # Real-time activity feed
-│   │   │   └── 📄 SessionContainer.tsx # Session layout
-│   │   └── 📁 modules/
-│   │       └── 📁 shared/
-│   │           └── 📁 hooks/
-│   │               ├── 📄 useSocket.ts # WebSocket management
-│   │               └── 📄 useApi.ts    # API state management
-│   ├── 📄 package.json
-│   └── 📄 tsconfig.json
+│   │   ├── 📄 App.tsx               # Main application
+│   │   ├── 📁 components/           # UI components
+│   │   │   ├── 📄 CreateSession.tsx # Session creation form
+│   │   │   ├── 📄 SessionView.tsx   # Main session interface
+│   │   │   ├── 📄 UsersList.tsx     # Role-based user management
+│   │   │   └── 📄 Header.tsx        # Application header
+│   │   ├── 📁 modules/shared/
+│   │   │   ├── � components/       # Shared components
+│   │   │   │   ├── UserStoryManager.tsx # Story management
+│   │   │   │   └── VotingPanel.tsx      # Voting interface
+│   │   │   └── 📁 hooks/            # Custom React hooks
+│   │   │       ├── useSocket.ts     # WebSocket management
+│   │   │       └── useApi.ts        # API integration
+│   │   └── � types/                # TypeScript definitions
 ├── 📄 docker-compose.yml           # Multi-service orchestration
 └── 📄 start.sh                     # Quick start script
 ```
@@ -114,9 +138,10 @@ planning-poker/
    ```
 
 3. **Access the application**
-   - **Frontend**: http://localhost:3000
-   - **API**: http://localhost:3001
-   - **API Documentation**: http://localhost:3001/api-docs
+   - **Frontend**: http://localhost:3001 (Main application)
+   - **API**: http://localhost:3001/api (REST API)
+   - **API Documentation**: http://localhost:3001/api-docs (Swagger UI)
+   - **Health Check**: http://localhost:3001/health
    - **MongoDB**: localhost:27017
    - **Redis**: localhost:6379
 
@@ -173,17 +198,45 @@ NODE_ENV=development
 
 ## 🎮 Usage
 
-### Starting a Session
-1. Open the application in your browser
-2. Enter your name in the join form
-3. Click "Join Session" when connected
-4. Invite others to join using the same URL
+### Creating a Planning Poker Session
+1. **Access the application**: Open http://localhost:3001
+2. **Create Session**: Click "Create New Session"
+3. **Fill Session Details**:
+   - Session Name (required)
+   - Description (optional)
+   - Your Name as creator (required)
+4. **Start Session**: You become the Admin automatically
 
-### Real-time Features
-- **See Live Users**: View all connected participants in real-time
-- **Activity Feed**: Monitor join/leave events and name changes
-- **Change Name**: Update your display name during the session
-- **Connection Status**: Monitor your WebSocket connection status
+### Joining an Existing Session  
+1. **Enter Session ID**: Use the session link or ID
+2. **Enter Your Name**: Provide your display name
+3. **Join**: You enter as a Player by default
+4. **Role Assignment**: Admin can change your role if needed
+
+### Managing User Stories (Admin)
+1. **Create Stories**: Add user stories for estimation
+2. **Set Current Story**: Select which story to estimate
+3. **Start Voting**: Players can now vote on the current story
+4. **Reveal Votes**: Show results when ready
+5. **Re-estimate**: Reset votes for another round
+
+### Voting Process (Players)
+1. **Select Card**: Choose from Fibonacci sequence (0, 1, 2, 3, 5, 8, 13, 21, ?, ∞, ☕)
+2. **Submit Vote**: Your vote is submitted automatically
+3. **Wait for Reveal**: Admin controls when to show results
+4. **View Results**: See comprehensive voting metrics and distribution
+
+### Role-based Features
+- **👑 Admin**: Session management, story creation, vote revelation, role assignment
+- **🎯 Player**: Voting, emoji reactions, name changes
+- **👁️ Viewer**: Observe session, see results, emoji reactions
+
+### Advanced Features
+- **🎊 Emoji Reactions**: Send emojis with falling animations
+- **📊 Voting Status**: Real-time indicators showing who has voted
+- **🔄 Live Updates**: All changes synchronized across users
+- **🎭 Role Changes**: Dynamic role assignment during sessions
+- **🔐 Konami Code**: Hidden admin override (↑↑↓↓←→←→BA)
 
 ## 🏗️ Architecture
 
@@ -191,22 +244,36 @@ NODE_ENV=development
 ```
 Frontend (React) ←→ Socket.IO ←→ Backend (Node.js) ←→ MongoDB
                                       ↓
-                                  UserService
+                              Service Layer (UserService, SessionService, VoteService)
                                       ↓
-                              Real-time User Management
+                              Repository Layer (MongoDB/InMemory)
+                                      ↓
+                              Domain Entities (User, Session, UserStory, Vote)
 ```
 
-### Component Architecture
-- **Modular Design**: Each UI component has a single responsibility
-- **TypeScript Interfaces**: Full type safety across all components
-- **Custom Hooks**: Encapsulated state management logic
-- **Event-Driven**: WebSocket event handling with proper error management
+### Frontend Architecture
+- **Component-Based**: Modular React components with TypeScript
+- **Custom Hooks**: Encapsulated state management (useSocket, useApi)
+- **Real-time State**: WebSocket integration for live updates
+- **Role-based UI**: Conditional rendering based on user roles
+- **Responsive Design**: Mobile-first approach with CSS Grid/Flexbox
 
-### Backend Architecture
-- **Layered Architecture**: Clear separation of concerns
-- **Domain-Driven Design**: Business logic separated from infrastructure
-- **Service Layer**: Encapsulated business operations
-- **Repository Pattern**: Data access abstraction
+### Backend Architecture  
+- **Clean Architecture**: Domain-driven design with layered approach
+- **Repository Pattern**: Abstraction layer for data access
+- **Factory Pattern**: Environment-based repository selection
+- **Service Layer**: Business logic encapsulation
+- **WebSocket Events**: Real-time communication for all features
+- **MongoDB Integration**: Production-ready persistence with indexes
+
+### Data Models
+```typescript
+// Core Domain Entities
+User: { id, name, sessionId, role, socketId }
+Session: { id, name, description, creatorId, settings }
+UserStory: { id, title, description, sessionId, isRevealed }
+Vote: { id, userId, userStoryId, points, isRevealed }
+```
 
 ## 🧪 Development
 
@@ -234,24 +301,22 @@ docker-compose logs api       # View API logs
 docker-compose logs frontend  # View frontend logs
 ```
 
-## 🚀 Future Enhancements
+## 🚀 Production Features
 
-This foundation is ready for Planning Poker features:
+This is a **complete, production-ready** Planning Poker application with all core features implemented:
 
-### Planned Features
-- **🃏 Card Selection**: Fibonacci sequence voting cards
-- **📊 Voting Results**: Real-time vote aggregation and reveal
-- **⏱️ Timer**: Session timing and round management
-- **📈 Statistics**: Historical voting data and analytics
-- **👥 Room Management**: Multiple concurrent sessions
-- **🎯 Story Points**: Integration with issue tracking systems
+### ✅ Implemented Features
+- **🃏 Complete Voting System**: Fibonacci cards with real-time voting
+- **📊 Comprehensive Metrics**: Vote totals, averages, and detailed distribution
+- **👥 Role Management**: Admin, Player, Viewer roles with appropriate permissions
+- **📝 Story Management**: Full CRUD operations for user stories
+- **🔄 Session Control**: Vote revelation, re-estimation, and session management
+- **⚡ Real-time Sync**: Live updates across all session participants
+- **🎊 Interactive Elements**: Emoji reactions with visual effects
+- **� Responsive Design**: Mobile-optimized interface
+- **🗃️ Data Persistence**: MongoDB integration with proper indexing
+- **🔐 Security**: Role-based access control and validation
 
-### Technical Roadmap
-- **Authentication**: User accounts and session persistence  
-- **Room System**: Multiple isolated gaming sessions
-- **Vote Management**: Secure voting logic and result calculation
-- **Mobile App**: React Native companion application
-- **Analytics**: Detailed session reporting and insights
 
 ## 🤝 Contributing
 
@@ -270,17 +335,26 @@ The API documentation is automatically generated and available at:
 ### WebSocket Events
 
 #### Client → Server
-- `user-join`: Join session with username
-- `update-name`: Change display name
-- `get-users`: Request current user list
+- `user-join`: Join session with username and role
+- `update-name`: Change display name during session
+- `request-role-change`: Request role change for user
+- `vote-submitted`: Submit vote for current story
+- `votes-revealed`: Admin reveals votes for story
+- `voting-reset`: Admin resets voting for re-estimation
+- `send-reaction`: Send emoji reaction to session
 
-#### Server → Client
-- `welcome`: Successful join confirmation
-- `users-updated`: Updated user list broadcast
+#### Server → Client  
+- `welcome`: Successful join with user details
+- `users-updated`: Updated user list with roles
 - `user-joined`: New user joined notification
-- `user-left`: User disconnected notification
+- `user-left`: User disconnected notification  
 - `user-name-changed`: Name change notification
-- `error`: Error messages
+- `role-changed`: User role change notification
+- `vote-submitted`: Vote status update (without revealing vote)
+- `votes-revealed`: Votes revealed with metrics and distribution
+- `voting-reset`: Voting session reset notification
+- `reaction-sent`: Emoji reaction broadcast
+- `error`: Error messages and validation failures
 
 ## 📄 License
 
@@ -292,4 +366,4 @@ This project is licensed under the ISC License.
 
 ---
 
-🎯 **Ready for Planning Poker!** This foundation provides robust real-time user management, perfect for building collaborative estimation tools.
+🎯 **Production-Ready Planning Poker!** A complete, feature-rich planning poker application ready for agile teams to conduct efficient estimation sessions with real-time collaboration, comprehensive voting metrics, and professional-grade architecture.
