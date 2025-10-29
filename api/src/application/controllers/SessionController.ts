@@ -126,9 +126,9 @@ export class SessionController {
    *       200:
    *         description: List of active sessions
    */
-  getAllSessions = (req: Request, res: Response): void => {
+  getAllSessions = async (req: Request, res: Response): Promise<void> => {
     try {
-      const sessions = this.sessionService.getActiveSessions();
+      const sessions = await this.sessionService.getActiveSessions();
 
       res.json({
         success: true,
@@ -177,12 +177,12 @@ export class SessionController {
    *       404:
    *         description: Session not found
    */
-  updateSession = (req: Request, res: Response): void => {
+  updateSession = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       const updateRequest: UpdateSessionRequest = req.body;
 
-      const session = this.sessionService.updateSession(id, updateRequest);
+      const session = await this.sessionService.updateSession(id, updateRequest);
 
       if (!session) {
         res.status(404).json({
@@ -222,10 +222,10 @@ export class SessionController {
    *       404:
    *         description: Session not found
    */
-  deleteSession = (req: Request, res: Response): void => {
+  deleteSession = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const deleted = this.sessionService.deleteSession(id);
+      const deleted = await this.sessionService.deleteSession(id);
 
       if (!deleted) {
         res.status(404).json({

@@ -1,12 +1,10 @@
+// DEPRECATED: This file is no longer used
+// Session routes are now initialized directly in app.ts using RepositoryFactory
+// This file is kept for reference only
+
 import { Router } from 'express';
-import { SessionController } from '../controllers/SessionController';
-import { SessionService } from '../services/SessionService';
-import { InMemorySessionRepository } from '../../infrastructure/repositories/InMemorySessionRepository';
 
 const router = Router();
-const sessionRepository = new InMemorySessionRepository();
-const sessionService = new SessionService(sessionRepository);
-const sessionController = new SessionController(sessionService);
 
 /**
  * @swagger
@@ -54,11 +52,5 @@ const sessionController = new SessionController(sessionService);
  *               type: number
  */
 
-// Session CRUD routes
-router.post('/sessions', sessionController.createSession);
-router.get('/sessions', sessionController.getAllSessions);
-router.get('/sessions/:id', sessionController.getSession);
-router.put('/sessions/:id', sessionController.updateSession);
-router.delete('/sessions/:id', sessionController.deleteSession);
-
-export { router as sessionRoutes, sessionService };
+// This router is empty - routes are now handled in app.ts
+export { router as sessionRoutes };

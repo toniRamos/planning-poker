@@ -107,9 +107,23 @@ const SessionView: React.FC = () => {
 
   // Auto-join creator when they access session directly
   useEffect(() => {
+    console.log('Auto-join useEffect triggered with:', {
+      creatorName,
+      sessionExists: !!session,
+      currentUser: currentUser?.name || 'none',
+      socketConnected: !!socket?.connected
+    });
+    
     if (creatorName && session && !currentUser && socket) {
-      // Creator joins directly with admin role
+      console.log(`🚀 Auto-joining creator ${creatorName} with ADMIN role`);
       handleJoinSession(creatorName, UserRole.ADMIN);
+    } else {
+      console.log('Auto-join conditions not met:', {
+        hasCreatorName: !!creatorName,
+        hasSession: !!session,
+        hasCurrentUser: !!currentUser,
+        hasSocket: !!socket
+      });
     }
   }, [creatorName, session, currentUser, socket]);
 

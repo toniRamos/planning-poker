@@ -54,6 +54,11 @@ export const useSocket = (sessionId?: string): UseSocketReturn => {
   const [users, setUsers] = useState<ConnectedUser[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [currentUser, setCurrentUser] = useState<ConnectedUser | null>(null);
+
+  // Debug: Log when currentUser changes
+  useEffect(() => {
+    console.log('🔄 Current user updated:', currentUser);
+  }, [currentUser]);
   const [messages, setMessages] = useState<Array<{ id: string; message: string; timestamp: Date; type: 'info' | 'error' | 'success' }>>([]);
 
   const addMessage = useCallback((message: string, type: 'info' | 'error' | 'success' = 'info') => {
@@ -103,6 +108,7 @@ export const useSocket = (sessionId?: string): UseSocketReturn => {
 
     // User event handlers
     socket.on('welcome', (data) => {
+      console.log('🎉 Welcome event received:', data.user);
       setCurrentUser(data.user);
       addMessage(data.message, 'success');
     });

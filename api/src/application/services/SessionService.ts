@@ -3,9 +3,7 @@ import { Session, CreateSessionRequest, UpdateSessionRequest, SessionSettings } 
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
 
 export class SessionService {
-  private sessions: Map<string, Session> = new Map();
-
-  constructor(private sessionRepository?: SessionRepository) {}
+  constructor(private sessionRepository: SessionRepository) {}
 
   async createSession(request: CreateSessionRequest): Promise<Session> {
     const sessionId = uuidv4();
@@ -33,24 +31,15 @@ export class SessionService {
       currentStoryId: undefined
     };
 
-    this.sessions.set(sessionId, session);
-    
-    if (this.sessionRepository) {
-      await this.sessionRepository.create(session);
-    }
-    
-    return session;
+    return await this.sessionRepository.create(session);
   }
 
   async getSession(sessionId: string): Promise<Session | null> {
-    if (this.sessionRepository) {
-      return await this.sessionRepository.findById(sessionId);
-    }
-    return this.sessions.get(sessionId) || null;
+    return await this.sessionRepository.findById(sessionId);
   }
 
-  updateSession(sessionId: string, request: UpdateSessionRequest): Session | null {
-    const session = this.sessions.get(sessionId);
+  async updateSession(sessionId: string, request: UpdateSessionRequest): Promise<Session | null> {
+    const session = await this.sessionRepository.findById(sessionId);
     if (!session) {
       return null;
     }
@@ -64,35 +53,43 @@ export class SessionService {
         : session.settings
     };
 
-    this.sessions.set(sessionId, updatedSession);
-    return updatedSession;
+    return await this.sessionRepository.update(sessionId, updatedSession);
   }
 
-  deleteSession(sessionId: string): boolean {
-    return this.sessions.delete(sessionId);
+  async deleteSession(sessionId: string): Promise<boolean> {
+    try {
+      await this.sessionRepository.delete(sessionId);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
-  getAllSessions(): Session[] {
-    return Array.from(this.sessions.values());
+  async getAllSessions(): Promise<Session[]> {
+    return await this.sessionRepository.findAll();
   }
 
-  getActiveSessions(): Session[] {
-    return this.getAllSessions().filter(session => session.isActive);
+  async getActiveSessions(): Promise<Session[]> {
+    const allSessions = await this.getAllSessions();
+    return allSessions.filter(session => session.isActive);
   }
 
-  deactivateSession(sessionId: string): Session | null {
-    return this.updateSession(sessionId, { isActive: false });
+  async deactivateSession(sessionId: string): Promise<Session | null> {
+    return await this.updateSession(sessionId, { isActive: false });
   }
 
-  sessionExists(sessionId: string): boolean {
-    return this.sessions.has(sessionId);
+  async sessionExists(sessionId: string): Promise<boolean> {
+    const session = await this.sessionRepository.findById(sessionId);
+    return session !== null;
   }
 
-  getSessionCount(): number {
-    return this.sessions.size;
+  async getSessionCount(): Promise<number> {
+    const sessions = await this.getAllSessions();
+    return sessions.length;
   }
 
-  getActiveSessionCount(): number {
-    return this.getActiveSessions().length;
+  async getActiveSessionCount(): Promise<number> {
+    const activeSessions = await this.getActiveSessions();
+    return activeSessions.length;
   }
 }
