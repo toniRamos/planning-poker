@@ -350,6 +350,7 @@ const SessionView: React.FC = () => {
         onToggleUsersPanel={() => setShowUsersPanel(!showUsersPanel)}
         showUsersPanel={showUsersPanel}
         onChangeName={handleOpenChangeNameModal}
+        onShareSession={currentUser ? handleShareSession : undefined}
       />
 
       {/* Change Name Modal */}
@@ -430,24 +431,6 @@ const SessionView: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="session-header">
-              <div className="session-title">
-                <h2>{session.name}</h2>
-                {session.description && (
-                  <p className="session-description">{session.description}</p>
-                )}
-              </div>
-              <div className="session-actions">
-                <button 
-                  className="share-button"
-                  onClick={handleShareSession}
-                  title="Copy session URL to clipboard"
-                >
-                  🔗 Share Session
-                </button>
-              </div>
-            </div>
-
             {currentUser && (
               <>
                 <UserStoryManager
