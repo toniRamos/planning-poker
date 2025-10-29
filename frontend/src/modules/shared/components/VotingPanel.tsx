@@ -37,6 +37,24 @@ interface VotingPanelProps {
 const CARD_VALUES = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
 const REACTION_EMOJIS = ['💩', '💪', '👀', '💔', '💯', '🙊', '🙉', '🙈', '🤬', '😍', '🔪', '🍆', '👍', '👎'];
 
+// Función utilitaria para obtener la clase de color según el valor de la carta
+const getCardValueClass = (value: string): string => {
+  const normalizedValue = value.toLowerCase().trim();
+  switch (normalizedValue) {
+    case '0': return 'value-0';
+    case '1': return 'value-1';
+    case '2': return 'value-2';
+    case '3': return 'value-3';
+    case '5': return 'value-5';
+    case '8': return 'value-8';
+    case '13': return 'value-13';
+    case '21': return 'value-21';
+    case '?': return 'value-question';
+    case '☕': return 'value-coffee';
+    default: return 'value-question'; // Fallback para valores no reconocidos
+  }
+};
+
 export const VotingPanel: React.FC<VotingPanelProps> = ({
   sessionId,
   currentUser,
@@ -149,24 +167,31 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   useEffect(() => {
     if (!currentUser?.isSpectator && !isCreator && !votesRevealed && cardsRef.current.length > 0) {
       const totalCards = CARD_VALUES.length;
-      const angleStep = 6; // degrees between cards
+      const angleStep = 12; // Increased degrees between cards for better spacing
       const startAngle = -((totalCards - 1) * angleStep) / 2;
-      const radius = 400; // Distance from center point
+      const radius = 300; // Reduced radius for better positioning
+      const verticalOffset = 50; // Additional vertical offset to separate cards better
 
       cardsRef.current.forEach((card, index) => {
         if (card) {
           const angle = startAngle + index * angleStep;
           const isSelected = selectedCard === index;
           
-          // Calculate position in arc
+          // Calculate position in arc with improved spacing
           const radian = (angle * Math.PI) / 180;
           const x = Math.sin(radian) * radius;
-          const y = Math.cos(radian) * radius - radius; // Offset to bottom
+          const y = (Math.cos(radian) * radius * 0.6) - radius + verticalOffset; // Reduced arc depth and added offset
           
-          // Set initial position and rotation
+          // Set initial position and rotation with better spacing
           const baseTransform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
-          card.style.transform = isSelected ? `${baseTransform} translateY(-50px) scale(1.1)` : baseTransform;
-          card.style.zIndex = String(isSelected ? 200 : index);
+          card.style.transform = isSelected ? `${baseTransform} translateY(-60px) scale(1.15)` : baseTransform;
+          card.style.zIndex = String(isSelected ? 200 : 10 + index);
+          
+          // Force position to avoid overlap
+          card.style.position = 'absolute';
+          card.style.left = '50%';
+          card.style.bottom = '20px';
+          card.style.marginLeft = '-50px'; // Half of card width for centering
 
           // Store base transform for animations
           card.dataset.baseTransform = baseTransform;
@@ -584,15 +609,20 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       <div className="vote-status">
         <h4>Voting Status</h4>
         <div className="vote-cards">
-          {votes.map((vote, index) => (
-            <div
-              key={vote.id}
-              className={`vote-card ${vote.isRevealed || votesRevealed ? 'revealed' : 'hidden'}`}
-            >
-              {vote.isRevealed || votesRevealed ? vote.points : '?'}
-              <div className="vote-user">{vote.userName?.trim() || 'Usuario'}</div>
-            </div>
-          ))}
+          {votes.map((vote, index) => {
+            const isRevealed = vote.isRevealed || votesRevealed;
+            const valueClass = isRevealed ? getCardValueClass(vote.points) : '';
+            
+            return (
+              <div
+                key={vote.id}
+                className={`vote-card ${isRevealed ? 'revealed' : 'hidden'} ${valueClass}`}
+              >
+                {isRevealed ? vote.points : '?'}
+                <div className="vote-user">{vote.userName?.trim() || 'Usuario'}</div>
+              </div>
+            );
+          })}
         </div>
         
         <div className="vote-summary">
