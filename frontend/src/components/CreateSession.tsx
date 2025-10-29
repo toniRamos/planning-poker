@@ -18,8 +18,8 @@ const CreateSession: React.FC = () => {
     description: '',
     createdBy: '',
     creatorName: '',
-    maxUsers: 10,
-    allowSpectators: true
+    maxUsers: 10, // Valor por defecto, no mostrado al usuario
+    allowSpectators: true // Valor por defecto, no mostrado al usuario
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,33 +133,6 @@ const CreateSession: React.FC = () => {
               required
               maxLength={50}
             />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="maxUsers">Max Participants</label>
-              <input
-                id="maxUsers"
-                name="maxUsers"
-                type="number"
-                value={formData.maxUsers}
-                onChange={handleInputChange}
-                min={2}
-                max={50}
-              />
-            </div>
-
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  name="allowSpectators"
-                  type="checkbox"
-                  checked={formData.allowSpectators}
-                  onChange={handleInputChange}
-                />
-                <span className="checkbox-label">Allow Spectators</span>
-              </label>
-            </div>
           </div>
 
           {error && (
