@@ -484,6 +484,8 @@ const SessionView: React.FC = () => {
                       currentUserRole={currentUser?.role}
                       sessionId={sessionId!}
                       socket={socket}
+                      currentStoryId={session.currentStoryId}
+                      isEstimationActive={!!session.currentStoryId}
                     />
                   </div>
                 </div>

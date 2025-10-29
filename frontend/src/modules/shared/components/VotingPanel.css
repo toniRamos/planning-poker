@@ -314,6 +314,55 @@
   color: #333;
 }
 
+.voting-metrics {
+  margin-bottom: 15px;
+}
+
+.metrics-summary {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.metric-item {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.metric-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.admin-metrics {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+}
+
+.admin-metrics .metrics-summary {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.admin-metrics .metric-item {
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  color: #212529;
+  font-weight: 600;
+}
+
 .results-summary {
   display: flex;
   flex-wrap: wrap;

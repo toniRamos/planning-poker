@@ -157,6 +157,37 @@ io.on('connection', (socket) => {
           user: user,
           message: `${user.name} joined as ${user.role === UserRole.ADMIN ? 'Admin 👑' : user.role}`
         });
+
+        // Send current voting status to the new user
+        try {
+          const sessionVotes = await voteService.getVotesForSession(data.sessionId);
+          if (sessionVotes.length > 0) {
+            console.log(`📊 Sending current voting status to new user ${data.userName}`);
+            // Group votes by userStoryId and send status for each story
+            const votesGrouped = sessionVotes.reduce((acc: any, vote) => {
+              if (!acc[vote.userStoryId]) {
+                acc[vote.userStoryId] = [];
+              }
+              acc[vote.userStoryId].push(vote);
+              return acc;
+            }, {});
+
+            // Send vote-submitted events for each existing vote
+            Object.keys(votesGrouped).forEach(storyId => {
+              const storyVotes = votesGrouped[storyId];
+              storyVotes.forEach((vote: any) => {
+                socket.emit('vote-submitted', {
+                  sessionId: data.sessionId,
+                  userStoryId: storyId,
+                  userId: vote.userId,
+                  hasVoted: true
+                });
+              });
+            });
+          }
+        } catch (error) {
+          console.error('Error sending voting status to new user:', error);
+        }
       }
     } catch (error) {
       console.error('Error in user-join:', error);
@@ -284,7 +315,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('voting-reset', (data: { sessionId: string; userStoryId: string }) => {
-    socket.to(data.sessionId).emit('voting-reset', {
+    console.log('🔄 Broadcasting voting-reset event for story:', data.userStoryId);
+    // Emit to all users in the session, including the sender
+    io.to(data.sessionId).emit('voting-reset', {
       userStoryId: data.userStoryId
     });
   });
@@ -292,7 +325,8 @@ io.on('connection', (socket) => {
   // Voting WebSocket events
   socket.on('vote-submitted', (data: { sessionId: string; vote: any; userId: string; userName: string }) => {
     // Broadcast to all users in the session that a vote was submitted (without revealing the vote)
-    socket.to(data.sessionId).emit('vote-submitted', {
+    console.log(`🗳️ Broadcasting vote-submitted for user ${data.userName} on story ${data.vote.userStoryId}`);
+    io.to(data.sessionId).emit('vote-submitted', {
       userId: data.userId,
       userName: data.userName,
       userStoryId: data.vote.userStoryId,
@@ -302,9 +336,25 @@ io.on('connection', (socket) => {
 
   socket.on('votes-revealed', (data: { sessionId: string; userStoryId: string; votes: any[] }) => {
     // Broadcast to all users in the session that votes were revealed
-    socket.to(data.sessionId).emit('votes-revealed', {
+    console.log(`📊 Broadcasting votes-revealed for story ${data.userStoryId} with ${data.votes.length} votes`);
+    
+    // Calculate voting metrics
+    const numericVotes = data.votes
+      .map(vote => parseFloat(vote.value))
+      .filter(value => !isNaN(value));
+    
+    const average = numericVotes.length > 0 
+      ? (numericVotes.reduce((sum, val) => sum + val, 0) / numericVotes.length).toFixed(1)
+      : 0;
+    
+    io.to(data.sessionId).emit('votes-revealed', {
       userStoryId: data.userStoryId,
-      votes: data.votes
+      votes: data.votes,
+      metrics: {
+        totalVotes: data.votes.length,
+        average: average,
+        hasNumericVotes: numericVotes.length > 0
+      }
     });
   });
 

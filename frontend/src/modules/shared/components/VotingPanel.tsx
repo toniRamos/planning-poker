@@ -51,6 +51,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   const [votesRevealed, setVotesRevealed] = useState(false);
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
   const [reactionCount, setReactionCount] = useState(0);
+  const [votingMetrics, setVotingMetrics] = useState<{totalVotes: number, average: string, hasNumericVotes: boolean} | null>(null);
   const cardsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const reactionCountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -84,6 +85,10 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       if (data.userStoryId === currentStory?.id) {
         setVotesRevealed(true);
         setVotes(data.votes);
+        // Set voting metrics if provided by backend
+        if (data.metrics) {
+          setVotingMetrics(data.metrics);
+        }
       }
     };
 
@@ -92,6 +97,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       setMyVote(null);
       setVotesRevealed(false);
       setSelectedCard(null); // Clear visual selection
+      setVotingMetrics(null); // Clear metrics
     };    const handleRoleChanged = (data: any) => {
       console.log('User role changed:', data);
       // Force re-render by clearing and refetching votes
@@ -570,6 +576,32 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       {isCreator && !votesRevealed && (
         <div className="voting-info">
           <p>👑 You are the <strong>Admin</strong> - you manage voting but cannot vote yourself</p>
+          
+          {/* Admin Pre-Reveal Metrics */}
+          {votes.length > 0 && (
+            <div className="admin-metrics">
+              <div className="metrics-summary">
+                <span className="metric-item">
+                  📈 Total Votes: <strong>{votes.length}</strong>
+                </span>
+                {(() => {
+                  const numericVotes = votes
+                    .map(vote => parseFloat(vote.points))
+                    .filter(value => !isNaN(value));
+                  
+                  if (numericVotes.length > 0) {
+                    const average = (numericVotes.reduce((sum, val) => sum + val, 0) / numericVotes.length).toFixed(1);
+                    return (
+                      <span className="metric-item">
+                        🎯 Average: <strong>{average} points</strong>
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -618,6 +650,23 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
             <div className="revealed-actions">
               <div className="vote-results">
                 <h4>📊 Results:</h4>
+                
+                {/* Voting Metrics */}
+                {votingMetrics && (
+                  <div className="voting-metrics">
+                    <div className="metrics-summary">
+                      <span className="metric-item">
+                        📈 Total Votes: <strong>{votingMetrics.totalVotes}</strong>
+                      </span>
+                      {votingMetrics.hasNumericVotes && (
+                        <span className="metric-item">
+                          🎯 Average: <strong>{votingMetrics.average} points</strong>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="results-summary">
                   {(() => {
                     const pointCounts = votes.reduce((acc: { [key: string]: number }, vote) => {

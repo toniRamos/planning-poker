@@ -503,11 +503,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 8px;
+  padding: 8px;
   background: transparent;
   border-radius: 6px;
   transition: background-color 0.2s ease;
   font-size: 0.85rem;
+  gap: 8px;
+  min-height: 40px;
 }
 
 .user-item:hover {
@@ -522,6 +524,10 @@
   flex: 1;
   color: #2c3e50;
   font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .you-indicator {
@@ -542,6 +548,49 @@
   border-radius: 4px;
   background: white;
   margin-left: 8px;
+}
+
+/* Role Sections */
+.role-section {
+  margin-bottom: 16px;
+}
+
+.role-header {
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 3px solid;
+}
+
+.admin-header {
+  color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-left-color: #e74c3c;
+}
+
+.player-header {
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+  border-left-color: #3498db;
+}
+
+.viewer-header {
+  color: #95a5a6;
+  background-color: rgba(149, 165, 166, 0.1);
+  border-left-color: #95a5a6;
+}
+
+.voting-summary {
+  font-size: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: normal;
 }
 
 .user-name {
@@ -804,4 +853,38 @@
 
 .btn-secondary:hover {
   background: #5a6268;
+}
+
+/* User Voting Status Cards in Right Panel */
+.user-voting-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 28px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  margin: 0 6px;
+  border: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.user-voting-status.not-voted {
+  background: rgba(255, 255, 255, 0.3);
+  color: #ccc;
+  border-style: dashed;
+  opacity: 0.4;
+}
+
+.user-voting-status.voted {
+  background: rgba(108, 117, 125, 0.8);
+  color: white;
+  border-color: #6c757d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* User role styling for right panel */
+.user-role-simple {
+  flex-shrink: 0;
 }
