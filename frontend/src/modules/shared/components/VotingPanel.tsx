@@ -55,10 +55,12 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
     if (currentStory) {
       fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
       setVotesRevealed(currentStory.isRevealed);
+      setSelectedCard(null); // Clear visual selection when story changes
     } else {
       setVotes([]);
       setMyVote(null);
       setVotesRevealed(false);
+      setSelectedCard(null); // Clear visual selection when no story
     }
   }, [currentStory]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -81,16 +83,12 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       }
     };
 
-    const handleVotesCleared = (data: any) => {
-      console.log('Votes cleared:', data);
-      if (data.userStoryId === currentStory?.id) {
-        setVotes([]);
-        setMyVote(null);
-        setVotesRevealed(false);
-      }
-    };
-
-    const handleRoleChanged = (data: any) => {
+    const handleVotesCleared = () => {
+      setVotes([]);
+      setMyVote(null);
+      setVotesRevealed(false);
+      setSelectedCard(null); // Clear visual selection
+    };    const handleRoleChanged = (data: any) => {
       console.log('User role changed:', data);
       // Force re-render by clearing and refetching votes
       if (currentStory) {
@@ -307,6 +305,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
         setVotes([]);
         setMyVote(null);
         setVotesRevealed(false);
+        setSelectedCard(null); // Clear visual selection
 
         // Emit WebSocket event
         if (socket) {
