@@ -39,7 +39,7 @@ const REACTION_EMOJIS = ['💩', '💪', '👀', '💔', '💯', '🙊', '🙉',
 
 // Función utilitaria para obtener la clase de color según el valor de la carta
 const getCardValueClass = (value: string): string => {
-  const normalizedValue = value.toLowerCase().trim();
+  const normalizedValue = value;
   switch (normalizedValue) {
     case '0': return 'value-0';
     case '1': return 'value-1';
