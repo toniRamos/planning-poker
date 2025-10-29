@@ -220,7 +220,14 @@ io.on('connection', (socket) => {
     try {
       console.log(`🔄 Role change requested for user ${data.userId} to ${data.newRole} in session ${data.sessionId}`);
       
-      const updatedUser = userService.changeUserRole(socket.id, data.newRole);
+      // Verify that the requesting user is an admin
+      const requestingUser = userService.getUser(socket.id);
+      if (!requestingUser || requestingUser.role !== UserRole.ADMIN) {
+        socket.emit('error', { message: 'Only admins can change user roles' });
+        return;
+      }
+      
+      const updatedUser = userService.changeUserRole(data.userId, data.newRole);
       
       if (updatedUser) {
         // Notify all users in the session about the role change

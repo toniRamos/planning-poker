@@ -41,15 +41,28 @@ const UsersList: React.FC<UsersListProps> = ({
   };
 
   const handleRoleChange = async (targetUserId: string, newRole: UserRole) => {
-    if (!socket || !sessionId || currentUserRole !== UserRole.ADMIN) return;
+    console.log('🔄 Role change requested:', { targetUserId, newRole, sessionId, currentUserRole, isAdmin, socket: !!socket });
+    
+    if (!socket || !sessionId || currentUserRole !== UserRole.ADMIN) {
+      console.log('❌ Role change blocked:', {
+        noSocket: !socket,
+        noSessionId: !sessionId,
+        notAdmin: currentUserRole !== UserRole.ADMIN,
+        currentRole: currentUserRole
+      });
+      return;
+    }
     
     setChangingRole(targetUserId);
     
-    socket.emit('change-user-role', {
-      targetUserId,
+    const requestData = {
+      userId: targetUserId,
       newRole,
       sessionId
-    });
+    };
+    
+    console.log('📡 Emitting request-role-change:', requestData);
+    socket.emit('request-role-change', requestData);
 
     // Reset changing state after a delay
     setTimeout(() => setChangingRole(null), 1000);

@@ -19,6 +19,7 @@ export interface SocketEvents {
   'user-left': (data: { user: ConnectedUser; message: string }) => void;
   'user-name-changed': (data: { oldName: string; newName: string; message: string }) => void;
   'user-name-updated': (data: { users: ConnectedUser[]; updatedUser: { userId: string; userName: string } }) => void;
+  'role-changed': (data: { users: ConnectedUser[]; changedUser: { userId: string; newRole: UserRole } }) => void;
   error: (data: { message: string }) => void;
 }
 
@@ -149,18 +150,23 @@ export const useSocket = (sessionId?: string): UseSocketReturn => {
 
     socket.on('role-changed', (data) => {
       console.log('Role changed in useSocket:', data);
-      // Update current user's role if it's our role that changed
+      
+      // Update the users list
+      setUsers(data.users);
+      
+      // Update current user's role if it was changed
       setCurrentUser(prevUser => {
-        if (prevUser) {
+        if (prevUser && data.changedUser && prevUser.id === data.changedUser.userId) {
           return {
             ...prevUser,
-            role: data.newRole as UserRole,
-            isSpectator: data.newRole === UserRole.VIEWER
+            role: data.changedUser.newRole,
+            isSpectator: data.changedUser.newRole === UserRole.VIEWER
           };
         }
         return prevUser;
       });
-      addMessage(data.message, 'info');
+      
+      addMessage(`User role changed to ${data.changedUser.newRole}`, 'info');
     });
 
     // Request current users when connected (only if sessionId is provided)

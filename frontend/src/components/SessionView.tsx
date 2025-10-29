@@ -137,12 +137,12 @@ const SessionView: React.FC = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleRoleChanged = (data: { newRole: string; message: string }) => {
+    const handleRoleChanged = (data: { users: any[]; changedUser: { userId: string; newRole: string } }) => {
       console.log('Role changed:', data);
       // Force refresh of session data to update permissions
       refreshSession();
       // Show notification about role change
-      setRoleChangeNotification(data.message);
+      setRoleChangeNotification(`User role changed to ${data.changedUser.newRole}`);
       setTimeout(() => setRoleChangeNotification(null), 4000);
     };
 
