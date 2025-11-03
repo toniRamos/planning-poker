@@ -1,4 +1,5 @@
 import React from 'react';
+import './Header.css';
 
 interface HeaderProps {
   isConnected: boolean;
@@ -8,6 +9,7 @@ interface HeaderProps {
   onToggleUsersPanel?: () => void;
   showUsersPanel?: boolean;
   onChangeName?: () => void;
+  onShareSession?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -17,7 +19,8 @@ const Header: React.FC<HeaderProps> = ({
   currentUserName,
   onToggleUsersPanel,
   showUsersPanel,
-  onChangeName
+  onChangeName,
+  onShareSession
 }) => {
   return (
     <header className="app-header">
@@ -35,6 +38,16 @@ const Header: React.FC<HeaderProps> = ({
           <h1>🃏 Planning Poker</h1>
           {sessionName && <span className="session-name">{sessionName}</span>}
         </div>
+        {onShareSession && sessionName && (
+          <button 
+            className="share-button-header"
+            onClick={onShareSession}
+            title="Copy session URL to clipboard"
+          >
+            <span>🔗</span>
+            <span>Share</span>
+          </button>
+        )}
       </div>
       <div className="connection-status">
         {currentUserName && (
