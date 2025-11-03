@@ -172,74 +172,78 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       const radius = 300; // Reduced radius for better positioning
       const verticalOffset = 50; // Additional vertical offset to separate cards better
 
-      cardsRef.current.forEach((card, index) => {
-        if (card) {
-          const angle = startAngle + index * angleStep;
-          const isSelected = selectedCard === index;
-          
-          // Calculate position in arc with improved spacing
-          const radian = (angle * Math.PI) / 180;
-          const x = Math.sin(radian) * radius;
-          const y = (Math.cos(radian) * radius * 0.6) - radius + verticalOffset; // Reduced arc depth and added offset
-          
-          // Set initial position and rotation with better spacing
-          const baseTransform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
-          card.style.transform = isSelected ? `${baseTransform} translateY(-60px) scale(1.15)` : baseTransform;
-          card.style.zIndex = String(isSelected ? 200 : 10 + index);
-          
-          // Force position to avoid overlap
-          card.style.position = 'absolute';
-          card.style.left = '50%';
-          card.style.bottom = '20px';
-          card.style.marginLeft = '-50px'; // Half of card width for centering
+      // Small delay to ensure DOM is ready
+      const timeoutId = setTimeout(() => {
+        cardsRef.current.forEach((card, index) => {
+          if (card) {
+            const angle = startAngle + index * angleStep;
+            const isSelected = selectedCard === index;
+            
+            // Calculate position in arc with improved spacing
+            const radian = (angle * Math.PI) / 180;
+            const x = Math.sin(radian) * radius;
+            const y = (Math.cos(radian) * radius * 0.6) - radius + verticalOffset; // Reduced arc depth and added offset
+            
+            // Set initial position and rotation with better spacing
+            const baseTransform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
+            card.style.transform = isSelected ? `${baseTransform} translateY(-60px) scale(1.15)` : baseTransform;
+            card.style.zIndex = String(isSelected ? 200 : 10 + index);
+            
+            // Force position to avoid overlap
+            card.style.position = 'absolute';
+            card.style.left = '50%';
+            card.style.bottom = '20px';
+            card.style.marginLeft = '-50px'; // Half of card width for centering
 
-          // Store base transform for animations
-          card.dataset.baseTransform = baseTransform;
-          card.dataset.angle = String(angle);
+            // Store base transform for animations
+            card.dataset.baseTransform = baseTransform;
+            card.dataset.angle = String(angle);
 
-          // Remove old listeners if any
-          const oldMouseEnter = (card as any)._mouseEnterHandler;
-          const oldMouseLeave = (card as any)._mouseLeaveHandler;
-          if (oldMouseEnter) card.removeEventListener('mouseenter', oldMouseEnter);
-          if (oldMouseLeave) card.removeEventListener('mouseleave', oldMouseLeave);
+            // Remove old listeners if any
+            const oldMouseEnter = (card as any)._mouseEnterHandler;
+            const oldMouseLeave = (card as any)._mouseLeaveHandler;
+            if (oldMouseEnter) card.removeEventListener('mouseenter', oldMouseEnter);
+            if (oldMouseLeave) card.removeEventListener('mouseleave', oldMouseLeave);
 
-          // Mouse enter animation
-          const handleMouseEnter = () => {
-            if (selectedCard !== index) {
-              anime.animate(card, {
-                translateY: [0, -40],
-                scale: [1, 1.05],
-                duration: 400,
-                easing: 'out-expo',
-              });
-              card.style.zIndex = '100';
-            }
-          };
+            // Mouse enter animation
+            const handleMouseEnter = () => {
+              if (selectedCard !== index) {
+                anime.animate(card, {
+                  translateY: [0, -40],
+                  scale: [1, 1.05],
+                  duration: 400,
+                  easing: 'out-expo',
+                });
+                card.style.zIndex = '100';
+              }
+            };
 
-          // Mouse leave animation
-          const handleMouseLeave = () => {
-            if (selectedCard !== index) {
-              anime.animate(card, {
-                translateY: [-40, 0],
-                scale: [1.05, 1],
-                duration: 400,
-                easing: 'out-expo',
-              });
-              card.style.zIndex = String(index);
-            }
-          };
+            // Mouse leave animation
+            const handleMouseLeave = () => {
+              if (selectedCard !== index) {
+                anime.animate(card, {
+                  translateY: [-40, 0],
+                  scale: [1.05, 1],
+                  duration: 400,
+                  easing: 'out-expo',
+                });
+                card.style.zIndex = String(index);
+              }
+            };
 
-          // Store handlers for cleanup
-          (card as any)._mouseEnterHandler = handleMouseEnter;
-          (card as any)._mouseLeaveHandler = handleMouseLeave;
+            // Store handlers for cleanup
+            (card as any)._mouseEnterHandler = handleMouseEnter;
+            (card as any)._mouseLeaveHandler = handleMouseLeave;
 
-          card.addEventListener('mouseenter', handleMouseEnter);
-          card.addEventListener('mouseleave', handleMouseLeave);
-        }
-      });
+            card.addEventListener('mouseenter', handleMouseEnter);
+            card.addEventListener('mouseleave', handleMouseLeave);
+          }
+        });
+      }, 10); // Small delay to ensure DOM is fully ready
 
       // Cleanup function
       return () => {
+        clearTimeout(timeoutId);
         cardsRef.current.forEach(card => {
           if (card) {
             const mouseEnter = (card as any)._mouseEnterHandler;
@@ -250,7 +254,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
         });
       };
     }
-  }, [currentUser?.isSpectator, isCreator, votesRevealed, selectedCard]);
+  }, [currentUser?.isSpectator, isCreator, votesRevealed, selectedCard, currentStory?.id]);
 
   const fetchVotes = async () => {
     if (!currentStory) return;
