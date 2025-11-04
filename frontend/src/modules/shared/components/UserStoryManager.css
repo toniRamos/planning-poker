@@ -232,6 +232,30 @@ body.dark-mode .story-item.current {
   font-weight: 500;
 }
 
+.estimate-inline {
+  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scored-badge {
+  background: linear-gradient(135deg, var(--success) 0%, #047857 100%);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
 .story-description {
   margin: 10px 0;
   color: #666;

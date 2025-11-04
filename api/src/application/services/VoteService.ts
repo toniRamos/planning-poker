@@ -116,7 +116,58 @@ export class VoteService {
       })
     );
 
+    // Calculate average of numeric votes and update user story
+    await this.updateUserStoryEstimate(userStoryId, revealedVotes);
+
     return revealedVotes;
+  }
+
+  async revealVotesWithStory(userStoryId: string): Promise<{ votes: Vote[]; userStory: any }> {
+    const votes = await this.revealVotes(userStoryId);
+    
+    // Get the updated user story with estimatedPoints
+    const sessions = await this.sessionRepository.findAll();
+    let userStory = null;
+    
+    for (const session of sessions) {
+      const story = session.userStories.find(us => us.id === userStoryId);
+      if (story) {
+        userStory = story;
+        break;
+      }
+    }
+
+    return {
+      votes,
+      userStory
+    };
+  }
+
+  private async updateUserStoryEstimate(userStoryId: string, votes: Vote[]): Promise<void> {
+    // Filter numeric votes
+    const numericVotes = votes
+      .map(vote => parseFloat(vote.points))
+      .filter(value => !isNaN(value));
+
+    if (numericVotes.length === 0) {
+      return; // No numeric votes to calculate average
+    }
+
+    // Calculate average
+    const average = numericVotes.reduce((sum, val) => sum + val, 0) / numericVotes.length;
+    const averageStr = average.toFixed(1);
+
+    // Find the session and update the user story
+    const sessions = await this.sessionRepository.findAll();
+    for (const session of sessions) {
+      const userStoryIndex = session.userStories.findIndex(us => us.id === userStoryId);
+      if (userStoryIndex !== -1) {
+        session.userStories[userStoryIndex].estimatedPoints = averageStr;
+        session.updatedAt = new Date();
+        await this.sessionRepository.update(session.id, session);
+        break;
+      }
+    }
   }
 
   async clearVotesForStory(userStoryId: string): Promise<void> {

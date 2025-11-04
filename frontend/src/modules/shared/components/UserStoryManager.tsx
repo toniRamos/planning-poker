@@ -76,7 +76,11 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
     const handleStoryRevealed = (data: any) => {
       console.log('Story revealed:', data.userStory);
       setUserStories(prev => prev.map(story => 
-        story.id === data.userStory.id ? { ...story, isRevealed: true } : story
+        story.id === data.userStory.id ? { 
+          ...story, 
+          isRevealed: true,
+          estimatedPoints: data.userStory.estimatedPoints 
+        } : story
       ));
     };
 
@@ -90,7 +94,11 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
     const handleStoryScoreToggled = (data: any) => {
       console.log('Story score toggled:', data.userStory);
       setUserStories(prev => prev.map(story => 
-        story.id === data.userStory.id ? { ...story, isScored: data.userStory.isScored } : story
+        story.id === data.userStory.id ? { 
+          ...story, 
+          isScored: data.userStory.isScored,
+          estimatedPoints: data.userStory.estimatedPoints 
+        } : story
       ));
     };
 
@@ -105,11 +113,25 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       }
     };
 
+    const handleVotesRevealed = (data: any) => {
+      console.log('Votes revealed in UserStoryManager:', data);
+      if (data.userStory) {
+        setUserStories(prev => prev.map(story => 
+          story.id === data.userStory.id ? { 
+            ...story, 
+            isRevealed: true,
+            estimatedPoints: data.userStory.estimatedPoints 
+          } : story
+        ));
+      }
+    };
+
     socket.on('user-story-updated', handleUserStoryUpdated);
     socket.on('current-story-changed', handleCurrentStoryChanged);
     socket.on('story-revealed', handleStoryRevealed);
     socket.on('story-score-toggled', handleStoryScoreToggled);
     socket.on('voting-reset', handleVotingReset);
+    socket.on('votes-revealed', handleVotesRevealed);
     socket.on('role-changed', handleRoleChanged);
 
     return () => {
@@ -118,6 +140,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       socket.off('story-revealed', handleStoryRevealed);
       socket.off('story-score-toggled', handleStoryScoreToggled);
       socket.off('voting-reset', handleVotingReset);
+      socket.off('votes-revealed', handleVotesRevealed);
       socket.off('role-changed', handleRoleChanged);
     };
   }, [socket, onStoryChange]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -429,6 +452,9 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                   >
                     {story.title}
                   </a>
+                  {story.estimatedPoints && (
+                    <span className="estimate-inline">📊 {story.estimatedPoints} pts</span>
+                  )}
                   {currentStoryId === story.id && (
                     <span className="current-badge">Current</span>
                   )}
@@ -436,12 +462,6 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     <span className="scored-badge">✅ Scored</span>
                   )}
                 </div>
-                
-                {story.estimatedPoints && story.isRevealed && (
-                  <div className="story-estimate">
-                    <span className="estimate-badge">{story.estimatedPoints}</span>
-                  </div>
-                )}
               </div>
 
               {isCreator && (

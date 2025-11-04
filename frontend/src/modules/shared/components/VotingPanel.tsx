@@ -342,16 +342,20 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       });
 
       if (response.ok) {
-        const revealedVotes = await response.json();
+        const result = await response.json();
+        const revealedVotes = result.votes || result; // Support both old and new format
+        const userStory = result.userStory;
+        
         setVotesRevealed(true);
         setVotes(revealedVotes);
 
-        // Emit WebSocket event
+        // Emit WebSocket event with user story data
         if (socket) {
           socket.emit('votes-revealed', {
             sessionId,
             userStoryId: currentStory.id,
-            votes: revealedVotes
+            votes: revealedVotes,
+            userStory: userStory
           });
         }
 

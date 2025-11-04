@@ -67,9 +67,9 @@ export class VoteController {
   async revealVotes(req: Request, res: Response): Promise<void> {
     try {
       const { userStoryId } = req.params;
-      const revealedVotes = await this.voteService.revealVotes(userStoryId);
+      const result = await this.voteService.revealVotesWithStory(userStoryId);
       
-      res.json(revealedVotes);
+      res.json(result);
     } catch (error) {
       console.error('Error revealing votes:', error);
       res.status(500).json({ error: 'Failed to reveal votes' });
