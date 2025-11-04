@@ -316,7 +316,7 @@ NODE_ENV=development
 - **🎭 Role Changes**: Dynamic role assignment during sessions
 - **🔒 Session Locking**: Complete lockdown with analytics on closure
 - **📊 Participation Analytics**: Detailed user statistics and voting averages
-- **🔐 Konami Code**: Hidden admin override (↑↑↓↓←→←→BA)
+- **🔐 Konami Code**: Hidden admin override (↑↓←→↑↓←→)
 
 ## 🏗️ Architecture
 
