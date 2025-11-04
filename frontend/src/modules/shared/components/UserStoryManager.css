@@ -1,10 +1,11 @@
 .user-story-manager {
-  background: white;
+  background: var(--card-bg);
   border-radius: var(--radius-2xl);
   padding: var(--spacing-8);
   box-shadow: var(--shadow-lg);
   margin-bottom: var(--spacing-6);
-  border: 1px solid var(--neutral-200);
+  border: 1px solid var(--border-color);
+  transition: background var(--transition-base), border-color var(--transition-base);
 }
 
 .story-header {
@@ -13,12 +14,12 @@
   align-items: center;
   margin-bottom: var(--spacing-6);
   padding-bottom: var(--spacing-4);
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .story-header h3 {
   margin: 0;
-  color: var(--neutral-900);
+  color: var(--text-primary);
   font-size: var(--text-xl);
   font-weight: var(--font-semibold);
 }
@@ -29,11 +30,11 @@
 }
 
 .add-story-form {
-  background: var(--neutral-50);
+  background: var(--bg-tertiary);
   border-radius: var(--radius-xl);
   padding: var(--spacing-6);
   margin-bottom: var(--spacing-6);
-  border: 1px solid var(--neutral-200);
+  border: 1px solid var(--border-color);
 }
 
 .form-group {
@@ -44,20 +45,20 @@
   display: block;
   margin-bottom: var(--spacing-2);
   font-weight: var(--font-medium);
-  color: var(--neutral-800);
+  color: var(--text-primary);
   font-size: var(--text-sm);
 }
-
 .form-group input,
 .form-group textarea {
   width: 100%;
   padding: var(--spacing-3);
-  border: 1px solid var(--neutral-300);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   font-size: var(--text-sm);
   font-family: inherit;
   resize: vertical;
-  background-color: white;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   transition: all var(--transition-base);
 }
 
@@ -136,7 +137,7 @@
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .empty-state p {
@@ -144,8 +145,8 @@
 }
 
 .story-item {
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 10px;
@@ -154,12 +155,17 @@
 }
 
 .story-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .story-item.current {
-  border-color: #007bff;
-  background: #f0f7ff;
+  border-color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+body.dark-mode .story-item.current {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-500);
 }
 
 .story-content {
@@ -187,14 +193,14 @@
 .story-title {
   margin: 0;
   font-size: 1rem;
-  color: #333;
+  color: var(--text-primary);
   flex: 1;
 }
 
 .story-title-link {
   margin: 0;
   font-size: 1rem;
-  color: #007bff;
+  color: var(--primary-600);
   flex: 1;
   text-decoration: none;
   font-weight: 500;
@@ -203,7 +209,7 @@
 }
 
 .story-title-link:hover {
-  color: #0056b3;
+  color: var(--primary-700);
   text-decoration: underline;
 }
 

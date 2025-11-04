@@ -1,35 +1,36 @@
 .voting-panel {
-  background: white;
+  background: var(--card-bg);
   border-radius: var(--radius-2xl);
   padding: var(--spacing-8);
   box-shadow: var(--shadow-lg);
   margin-bottom: var(--spacing-6);
-  border: 1px solid var(--neutral-200);
+  border: 1px solid var(--border-color);
+  transition: background var(--transition-base), border-color var(--transition-base);
 }
 
 .voting-header {
   margin-bottom: var(--spacing-6);
   padding-bottom: var(--spacing-4);
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .voting-header h3 {
   margin: 0 0 var(--spacing-3) 0;
-  color: var(--neutral-900);
+  color: var(--text-primary);
   font-size: var(--text-xl);
   font-weight: var(--font-semibold);
 }
 
 .current-story h4 {
   margin: 0 0 var(--spacing-2) 0;
-  color: var(--primary-700);
+  color: var(--primary-600);
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
 }
 
 .story-description {
   margin: 0;
-  color: var(--neutral-600);
+  color: var(--text-secondary);
   font-size: var(--text-base);
   line-height: 1.6;
 }
@@ -37,11 +38,11 @@
 .no-story {
   text-align: center;
   padding: var(--spacing-12) var(--spacing-6);
-  color: var(--neutral-600);
+  color: var(--text-secondary);
 }
 
 .no-story h3 {
-  color: var(--neutral-800);
+  color: var(--text-primary);
   margin-bottom: var(--spacing-4);
   font-weight: var(--font-semibold);
 }
@@ -56,7 +57,7 @@
 
 .voting-section h4 {
   margin: 0 0 var(--spacing-4) 0;
-  color: var(--neutral-900);
+  color: var(--text-primary);
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
 }

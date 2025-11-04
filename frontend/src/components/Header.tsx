@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './Header.css';
 
 interface HeaderProps {
@@ -22,6 +22,27 @@ const Header: React.FC<HeaderProps> = ({
   onChangeName,
   onShareSession
 }) => {
+  const [darkMode, setDarkMode] = useState(() => {
+    // Load dark mode preference from localStorage
+    const saved = localStorage.getItem('darkMode');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    // Apply dark mode class to body
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    // Save preference to localStorage
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
     <header className="app-header">
       <div className="header-left">
@@ -62,6 +83,18 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
         )}
+        
+        {/* Dark Mode Toggle */}
+        <div 
+          className="dark-mode-toggle" 
+          onClick={toggleDarkMode}
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          <span className="toggle-icon sun-icon">☀️</span>
+          <span className="toggle-icon moon-icon">🌙</span>
+          <div className="toggle-slider"></div>
+        </div>
+
         <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
           {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
         </span>
