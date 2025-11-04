@@ -42,6 +42,9 @@ let userStoryService: UserStoryService;
 // Initialize basic services
 const userService = new UserService();
 
+// Session state management for reactions
+const sessionReactionsState = new Map<string, boolean>();
+
 // Configure Express middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || true, // Allow all origins in development
@@ -151,6 +154,12 @@ io.on('connection', (socket) => {
         socket.emit('welcome', {
           user: user,
           message: `Welcome to the session! You are now connected as ${user.role === UserRole.ADMIN ? 'Admin 👑' : user.role}`
+        });
+
+        // Send current reactions state to the new user
+        const reactionsEnabled = sessionReactionsState.get(data.sessionId) ?? true;
+        socket.emit('reactions-toggled', {
+          enabled: reactionsEnabled
         });
         
         // Notify all users in the session about the updated user list
@@ -424,6 +433,9 @@ io.on('connection', (socket) => {
   socket.on('reactions-toggled', (data: { sessionId: string; enabled: boolean }) => {
     console.log(`🎭 Reactions ${data.enabled ? 'enabled' : 'disabled'} in session ${data.sessionId}`);
     
+    // Store the reactions state for this session
+    sessionReactionsState.set(data.sessionId, data.enabled);
+    
     // Broadcast the reactions toggle to all users in the session
     io.to(data.sessionId).emit('reactions-toggled', {
       enabled: data.enabled
@@ -483,6 +495,12 @@ io.on('connection', (socket) => {
           user: { userId: removedUser.id, userName: removedUser.name },
           message: `${removedUser.name} disconnected`
         });
+
+        // Clean up session reactions state if no users left
+        if (updatedUsers.length === 0) {
+          sessionReactionsState.delete(removedUser.sessionId);
+          console.log(`🧹 Cleaned up reactions state for empty session ${removedUser.sessionId}`);
+        }
       }
     } catch (error) {
       console.error('Error handling disconnect:', error);

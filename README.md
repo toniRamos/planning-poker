@@ -2,6 +2,32 @@
 
 A complete real-time collaborative Planning Poker application built with React, Node.js, TypeScript, Socket.IO, and MongoDB. This production-ready application enables agile teams to conduct efficient estimation sessions with comprehensive features for session management, voting, and real-time collaboration.
 
+## ✨ Recent Feature Additions
+
+### 📊 Advanced Analytics & Session Closure
+- **Session Closure System**: Complete session lockdown with one-click closure by admin
+- **Participation Summary**: Comprehensive report showing all participants, their voting averages, and reaction statistics
+- **User Voting Averages**: Automatic calculation of each participant's average vote across all stories (numeric votes only)
+- **Reaction Analytics**: Track and display emoji reactions per user with detailed counts and breakdowns
+
+### 🏷️ Story Tagging & Organization
+- **Multi-tag Support**: Add multiple tags to each user story for better categorization
+- **Tag Management**: Easy-to-use tag input system with visual badges
+- **Reference System**: Tags help POs and developers identify story context quickly
+- **Visual Indicators**: Color-coded tag badges for quick story identification
+
+### ⭐ Automatic Story Point Estimation
+- **Real-time Averaging**: Automatic calculation of average votes when revealed
+- **Inline Display**: Estimated points shown directly next to story titles
+- **Smart Calculation**: Excludes non-numeric votes (?, ☕) from averages
+- **Persistent Storage**: Story estimates saved and displayed across sessions
+
+### 🌓 Dark Mode Support
+- **Theme Toggle**: Easy-to-access dark mode switch in the application header
+- **Persistent Preference**: Theme choice saved in localStorage across sessions
+- **CSS Variables**: Smooth theme transitions with optimized color schemes
+- **Comprehensive Coverage**: All components and UI elements support both themes
+
 ## 🚀 Features
 
 ### 🎯 Complete Planning Poker Experience
@@ -9,23 +35,37 @@ A complete real-time collaborative Planning Poker application built with React, 
 - **📊 Real-time Voting**: Live vote submission and status tracking
 - **🔍 Vote Revelation**: Admin-controlled vote reveal with comprehensive metrics
 - **📈 Voting Analytics**: Total votes, averages, and detailed distribution
+- **⭐ Story Point Estimation**: Automatic average calculation displayed next to story titles
 - **🔄 Re-estimation**: Reset voting for new rounds
 - **👥 Role-based Access**: Admin, Player, and Viewer roles
 
 ### 🎮 Session Management
 - **📝 Story Management**: Create, edit, and manage user stories
+- **🏷️ Story Tagging System**: Multi-tag support for categorizing user stories (PO and Dev references)
 - **⚡ Live Sessions**: Real-time session updates and synchronization  
 - **👑 Admin Controls**: Session administration with role management
+- **🔒 Session Closure**: Complete session lockdown with participation summary
+- **📊 Participation Summary**: Detailed report showing all participants, their reactions, and voting averages
 - **🎭 Role Assignment**: Dynamic role changes during sessions
-- **🎊 Interactive Elements**: Emoji reactions with falling animations
+- **🎊 Interactive Elements**: Emoji reactions with falling animations and statistics
 
-### ✨ Advanced User Experience
+### 🌙 User Experience Enhancements
+- **🌓 Dark Mode**: Toggle between light and dark themes with localStorage persistence
 - **🔄 Real-time Synchronization**: Live updates across all participants
 - **📱 Responsive Design**: Mobile-first design with elegant UI
 - **🎨 Modern Interface**: Clean, professional design with smooth animations
 - **🔐 Konami Code**: Hidden admin override for orphaned sessions
 - **👥 Role-based UI**: Different interfaces for Admins, Players, and Viewers
 - **📊 Voting Status Indicators**: Visual feedback for voting progress
+
+### 📊 Advanced Analytics & Reporting
+- **📈 User Voting Averages**: Automatic calculation of each participant's average vote across all stories
+- **🎉 Reaction Statistics**: Track and display emoji reactions per user with counts
+- **📋 Comprehensive Summary**: When session closes, displays:
+  - All participants who joined the session
+  - Total reactions sent by each user
+  - Average voting score per participant (numeric votes only)
+  - Visual breakdown of reaction types per user
 
 ### 🏗️ Technical Excellence
 - **TypeScript**: Full type safety across frontend and backend
@@ -215,27 +255,67 @@ NODE_ENV=development
 
 ### Managing User Stories (Admin)
 1. **Create Stories**: Add user stories for estimation
-2. **Set Current Story**: Select which story to estimate
-3. **Start Voting**: Players can now vote on the current story
-4. **Reveal Votes**: Show results when ready
-5. **Re-estimate**: Reset votes for another round
+2. **Add Tags**: Categorize stories with multiple tags (e.g., "Frontend", "Backend", "API")
+3. **Set Current Story**: Select which story to estimate
+4. **Start Voting**: Players can now vote on the current story
+5. **Reveal Votes**: Show results with automatic average calculation
+6. **View Averages**: See estimated points displayed next to story titles
+7. **Re-estimate**: Reset votes for another round
+8. **Close Session**: Lock session and generate participation summary
 
 ### Voting Process (Players)
 1. **Select Card**: Choose from Fibonacci sequence (0, 1, 2, 3, 5, 8, 13, 21, ?, ∞, ☕)
 2. **Submit Vote**: Your vote is submitted automatically
 3. **Wait for Reveal**: Admin controls when to show results
-4. **View Results**: See comprehensive voting metrics and distribution
+4. **View Results**: See comprehensive voting metrics, distribution, and story average
+5. **Send Reactions**: Express feedback with emoji reactions (tracked per user)
+
+### Session Closure & Analytics
+1. **Close Session** (Admin only): Locks the session completely
+2. **Automatic Calculation**: System calculates each user's voting average
+3. **Participation Summary**: Displays comprehensive report with:
+   - All participants with their roles
+   - Total reactions sent by each user
+   - Breakdown of reaction types per user
+   - Average voting score per participant (excludes ?, ☕)
+4. **Locked State**: No further voting, story changes, or reactions allowed
+5. **Real-time Sync**: All participants see the summary simultaneously
+
+### User Interface Customization
+- **🌓 Dark Mode Toggle**: Switch themes in header (persists across sessions)
+- **🏷️ Story Tags**: Visual badges for story categorization
+- **📊 Inline Metrics**: Average points shown directly on story titles
+- **🎨 Color-coded Cards**: Different colors for different card values
+- **🎭 Role Badges**: Clear visual indication of user roles
 
 ### Role-based Features
-- **👑 Admin**: Session management, story creation, vote revelation, role assignment
-- **🎯 Player**: Voting, emoji reactions, name changes
-- **👁️ Viewer**: Observe session, see results, emoji reactions
+- **👑 Admin**: 
+  - Session management and closure
+  - Story creation with tags
+  - Vote revelation and re-estimation
+  - Role assignment
+  - Access to participation analytics
+- **🎯 Player**: 
+  - Voting on stories
+  - Emoji reactions (tracked in statistics)
+  - Name changes
+  - View voting averages
+- **👁️ Viewer**: 
+  - Observe session
+  - See results and metrics
+  - Emoji reactions (tracked in statistics)
+  - View participation summary when closed
 
 ### Advanced Features
-- **🎊 Emoji Reactions**: Send emojis with falling animations
+- **🎊 Emoji Reactions System**: Send emojis with falling animations, tracked per user
 - **📊 Voting Status**: Real-time indicators showing who has voted
-- **🔄 Live Updates**: All changes synchronized across users
+- **� Automatic Averaging**: Story points calculated and displayed automatically
+- **🏷️ Tag System**: Multi-tag support for story categorization
+- **🌓 Dark Mode**: Persistent theme switching with localStorage
+- **�🔄 Live Updates**: All changes synchronized across users via WebSocket
 - **🎭 Role Changes**: Dynamic role assignment during sessions
+- **🔒 Session Locking**: Complete lockdown with analytics on closure
+- **📊 Participation Analytics**: Detailed user statistics and voting averages
 - **🔐 Konami Code**: Hidden admin override (↑↑↓↓←→←→BA)
 
 ## 🏗️ Architecture
@@ -270,9 +350,23 @@ Frontend (React) ←→ Socket.IO ←→ Backend (Node.js) ←→ MongoDB
 ```typescript
 // Core Domain Entities
 User: { id, name, sessionId, role, socketId }
-Session: { id, name, description, creatorId, settings }
-UserStory: { id, title, description, sessionId, isRevealed }
+Session: { 
+  id, name, description, creatorId, settings,
+  isClosed, reactionStats, userAverages 
+}
+UserStory: { 
+  id, title, description, sessionId, 
+  tags, estimatedPoints, isRevealed 
+}
 Vote: { id, userId, userStoryId, points, isRevealed }
+
+// New Analytics Models
+ReactionStats: { 
+  [userId: string]: { [emoji: string]: number } 
+}
+UserAverages: { 
+  [userId: string]: number  // Average voting score
+}
 ```
 
 ## 🧪 Development
@@ -308,12 +402,18 @@ This is a **complete, production-ready** Planning Poker application with all cor
 ### ✅ Implemented Features
 - **🃏 Complete Voting System**: Fibonacci cards with real-time voting
 - **📊 Comprehensive Metrics**: Vote totals, averages, and detailed distribution
+- **⭐ Automatic Story Averaging**: Real-time calculation and display of story point estimates
+- **🏷️ Story Tagging System**: Multi-tag categorization for user stories
 - **👥 Role Management**: Admin, Player, Viewer roles with appropriate permissions
-- **📝 Story Management**: Full CRUD operations for user stories
+- **📝 Story Management**: Full CRUD operations for user stories with tags
 - **🔄 Session Control**: Vote revelation, re-estimation, and session management
-- **⚡ Real-time Sync**: Live updates across all session participants
+- **🔒 Session Closure**: Complete lockdown with participation analytics
+- **📊 Participation Analytics**: Detailed user statistics, voting averages, and reaction tracking
+- **🎉 Reaction System**: Emoji reactions with statistics per user
+- **⚡ Real-time Sync**: Live updates across all session participants via WebSocket
+- **🌓 Dark Mode**: Persistent theme switching with localStorage
 - **🎊 Interactive Elements**: Emoji reactions with visual effects
-- **� Responsive Design**: Mobile-optimized interface
+- **📱 Responsive Design**: Mobile-optimized interface
 - **🗃️ Data Persistence**: MongoDB integration with proper indexing
 - **🔐 Security**: Role-based access control and validation
 
@@ -354,11 +454,48 @@ The API documentation is automatically generated and available at:
 - `votes-revealed`: Votes revealed with metrics and distribution
 - `voting-reset`: Voting session reset notification
 - `reaction-sent`: Emoji reaction broadcast
+- `session-closed`: Session closure notification with analytics trigger
 - `error`: Error messages and validation failures
 
 ## 📄 License
 
 This project is licensed under the ISC License.
+
+## 🎯 Key Highlights
+
+### 🔒 Session Closure & Analytics
+When an admin closes a session, the system:
+- ✅ Locks all interactions (voting, reactions, story management)
+- ✅ Calculates voting averages for each participant automatically
+- ✅ Generates a comprehensive participation summary in real-time
+- ✅ Displays reaction statistics per user with emoji breakdown
+- ✅ Syncs closure state across all connected clients via WebSocket
+- ✅ Preserves all data for historical reference
+
+### 🏷️ Smart Story Management
+The tagging system enables:
+- ✅ Multiple tags per story for flexible categorization
+- ✅ Quick identification of frontend, backend, API, or database stories
+- ✅ Better sprint planning with organized backlogs
+- ✅ Visual badges for at-a-glance story recognition
+- ✅ Persistent tag data across sessions
+
+### ⭐ Intelligent Estimation
+Automatic averaging provides:
+- ✅ Real-time calculation when votes are revealed
+- ✅ Smart filtering (excludes ?, ☕ from numeric calculations)
+- ✅ Inline display of estimated points next to story titles
+- ✅ Persistent estimation data for future reference
+- ✅ Accurate team velocity tracking
+
+### 🎨 Enhanced User Experience
+Modern interface features:
+- ✅ Dark mode with persistent theme preference
+- ✅ Color-coded voting cards for visual distinction
+- ✅ Emoji reactions with falling animations
+- ✅ Role-based UI with appropriate controls
+- ✅ Real-time voting status indicators
+- ✅ Mobile-responsive design for all devices
 
 ## 👨‍💻 Author
 
@@ -366,4 +503,4 @@ This project is licensed under the ISC License.
 
 ---
 
-🎯 **Production-Ready Planning Poker!** A complete, feature-rich planning poker application ready for agile teams to conduct efficient estimation sessions with real-time collaboration, comprehensive voting metrics, and professional-grade architecture.
+🎯 **Production-Ready Planning Poker!** A complete, feature-rich planning poker application ready for agile teams to conduct efficient estimation sessions with real-time collaboration, comprehensive voting metrics, advanced analytics, and professional-grade architecture.
