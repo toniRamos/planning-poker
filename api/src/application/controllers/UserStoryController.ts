@@ -7,7 +7,7 @@ export class UserStoryController {
   async addUserStory(req: Request, res: Response): Promise<void> {
     try {
       const { sessionId } = req.params;
-      const { title, description, acceptanceCriteria } = req.body;
+      const { title, description, acceptanceCriteria, tags } = req.body;
 
       if (!title) {
         res.status(400).json({ error: 'Title is required' });
@@ -18,7 +18,8 @@ export class UserStoryController {
         sessionId,
         title,
         description,
-        acceptanceCriteria
+        acceptanceCriteria,
+        tags
       );
 
       res.status(201).json(userStory);

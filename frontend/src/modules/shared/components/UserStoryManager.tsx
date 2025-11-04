@@ -6,6 +6,7 @@ interface UserStory {
   title: string;
   description?: string;
   acceptanceCriteria?: string;
+  tags?: string[];
   order: number;
   estimatedPoints?: string;
   isRevealed: boolean;
@@ -32,8 +33,10 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newStory, setNewStory] = useState({
-    title: ''
+    title: '',
+    tags: [] as string[]
   });
+  const [tagInput, setTagInput] = useState('');
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
   useEffect(() => {
@@ -173,7 +176,8 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       if (response.ok) {
         const addedStory = await response.json();
         setUserStories([...userStories, addedStory]);
-        setNewStory({ title: '' });
+        setNewStory({ title: '', tags: [] });
+        setTagInput('');
         setShowAddForm(false);
         
         // Emit WebSocket event to notify other users
@@ -402,6 +406,64 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
               maxLength={500}
             />
           </div>
+          
+          <div className="form-group">
+            <label>Tags (Optional)</label>
+            <div className="tags-input-container">
+              <div className="tags-list">
+                {newStory.tags.map((tag, index) => (
+                  <span key={index} className="tag-item">
+                    {tag}
+                    <button
+                      type="button"
+                      className="tag-remove"
+                      onClick={() => {
+                        const newTags = newStory.tags.filter((_, i) => i !== index);
+                        setNewStory({ ...newStory, tags: newTags });
+                      }}
+                      title="Remove tag"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="tag-input-wrapper">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && tagInput.trim()) {
+                      e.preventDefault();
+                      if (!newStory.tags.includes(tagInput.trim())) {
+                        setNewStory({ ...newStory, tags: [...newStory.tags, tagInput.trim()] });
+                      }
+                      setTagInput('');
+                    }
+                  }}
+                  placeholder="Type a tag and press Enter"
+                  maxLength={50}
+                />
+                {tagInput.trim() && (
+                  <button
+                    type="button"
+                    className="btn-add-tag"
+                    onClick={() => {
+                      if (!newStory.tags.includes(tagInput.trim())) {
+                        setNewStory({ ...newStory, tags: [...newStory.tags, tagInput.trim()] });
+                      }
+                      setTagInput('');
+                    }}
+                  >
+                    + Add
+                  </button>
+                )}
+              </div>
+            </div>
+            <small className="form-hint">Examples: Epic-UserManagement, Backend, Frontend, Mobile, etc.</small>
+          </div>
+          
           <div className="form-actions">
             <button 
               className="btn btn-primary"
@@ -414,7 +476,8 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
               className="btn btn-secondary"
               onClick={() => {
                 setShowAddForm(false);
-                setNewStory({ title: '' });
+                setNewStory({ title: '', tags: [] });
+                setTagInput('');
               }}
             >
               Cancel
@@ -462,6 +525,16 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     <span className="scored-badge">✅ Scored</span>
                   )}
                 </div>
+                
+                {story.tags && story.tags.length > 0 && (
+                  <div className="story-tags">
+                    {story.tags.map((tag, tagIndex) => (
+                      <span key={tagIndex} className="story-tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {isCreator && (

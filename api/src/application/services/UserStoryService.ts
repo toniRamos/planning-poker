@@ -13,7 +13,8 @@ export class UserStoryService {
     sessionId: string, 
     title: string, 
     description?: string, 
-    acceptanceCriteria?: string
+    acceptanceCriteria?: string,
+    tags?: string[]
   ): Promise<UserStory> {
     const session = await this.sessionRepository.findById(sessionId);
     if (!session) {
@@ -25,6 +26,7 @@ export class UserStoryService {
       title,
       description,
       acceptanceCriteria,
+      tags: tags || [],
       order: session.userStories.length,
       estimatedPoints: undefined,
       isRevealed: false,
@@ -42,7 +44,7 @@ export class UserStoryService {
   async updateUserStory(
     sessionId: string, 
     userStoryId: string, 
-    updates: Partial<Pick<UserStory, 'title' | 'description' | 'acceptanceCriteria'>>
+    updates: Partial<Pick<UserStory, 'title' | 'description' | 'acceptanceCriteria' | 'tags'>>
   ): Promise<UserStory> {
     const session = await this.sessionRepository.findById(sessionId);
     if (!session) {

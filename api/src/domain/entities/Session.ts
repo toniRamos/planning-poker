@@ -3,6 +3,7 @@ export interface UserStory {
   title: string;
   description?: string;
   acceptanceCriteria?: string;
+  tags?: string[];
   order: number;
   estimatedPoints?: string;
   isRevealed: boolean;
