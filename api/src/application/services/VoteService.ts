@@ -25,6 +25,11 @@ export class VoteService {
       throw new Error('Session not found or inactive');
     }
 
+    // Don't allow voting if session is closed
+    if (session.isClosed) {
+      throw new Error('Session is closed');
+    }
+
     // Check if user story exists in session
     const userStory = session.userStories.find(us => us.id === request.userStoryId);
     if (!userStory) {

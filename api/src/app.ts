@@ -87,7 +87,7 @@ async function initializeServices() {
   const repositories = await repositoryFactory.createRepositories();
 
   // Initialize services with repositories
-  sessionService = new SessionService(repositories.sessionRepository);
+  sessionService = new SessionService(repositories.sessionRepository, repositories.voteRepository);
   voteService = new VoteService(repositories.voteRepository, repositories.sessionRepository);
   userStoryService = new UserStoryService(repositories.sessionRepository, voteService);
 
@@ -99,6 +99,9 @@ async function initializeServices() {
   const voteController = new VoteController(voteService);
   const userStoryController = new UserStoryController(userStoryService);
 
+  // Set Socket.IO instance for controllers that need it
+  sessionController.setIO(io);
+
   // Create and configure routes
   const sessionRoutes = Router();
   sessionRoutes.post('/sessions', sessionController.createSession.bind(sessionController));
@@ -106,6 +109,8 @@ async function initializeServices() {
   sessionRoutes.get('/sessions/:id', sessionController.getSession.bind(sessionController));
   sessionRoutes.put('/sessions/:id', sessionController.updateSession.bind(sessionController));
   sessionRoutes.delete('/sessions/:id', sessionController.deleteSession.bind(sessionController));
+  sessionRoutes.put('/sessions/:id/close', sessionController.closeSession.bind(sessionController));
+  sessionRoutes.post('/sessions/:id/reactions', sessionController.recordReaction.bind(sessionController));
 
   const userStoryRoutes = createUserStoryRoutes(userStoryController);
   const voteRoutes = createVoteRoutes(voteController);
@@ -399,8 +404,15 @@ io.on('connection', (socket) => {
   });
 
   // Reaction events
-  socket.on('reaction-sent', (data: { sessionId: string; emoji: string; userId: string; userName: string }) => {
+  socket.on('reaction-sent', async (data: { sessionId: string; emoji: string; userId: string; userName: string }) => {
     console.log(`😊 User ${data.userName} sent reaction ${data.emoji} in session ${data.sessionId}`);
+    
+    // Record reaction in session stats
+    try {
+      await sessionService.recordReaction(data.sessionId, data.userId, data.emoji);
+    } catch (error) {
+      console.error('Error recording reaction:', error);
+    }
     
     // Broadcast the reaction to all other users in the session (not the sender)
     socket.to(data.sessionId).emit('reaction-sent', {

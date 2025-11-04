@@ -30,8 +30,18 @@ interface SessionDocument {
     isRevealed: boolean;
     isScored: boolean;
     createdAt: Date;
+    tags?: string[];
   }>;
   currentStoryId?: string;
+  isClosed: boolean;
+  reactionStats: {
+    [userId: string]: {
+      [emoji: string]: number;
+    };
+  };
+  userAverages?: {
+    [userId: string]: number;
+  };
 }
 
 export class MongoSessionRepository implements SessionRepository {
@@ -73,7 +83,10 @@ export class MongoSessionRepository implements SessionRepository {
         ...story,
         createdAt: story.createdAt
       })),
-      currentStoryId: doc.currentStoryId
+      currentStoryId: doc.currentStoryId,
+      isClosed: doc.isClosed || false,
+      reactionStats: doc.reactionStats || {},
+      userAverages: doc.userAverages || {}
     };
   }
 
@@ -93,7 +106,10 @@ export class MongoSessionRepository implements SessionRepository {
         ...story,
         createdAt: story.createdAt
       })),
-      currentStoryId: session.currentStoryId
+      currentStoryId: session.currentStoryId,
+      isClosed: session.isClosed,
+      reactionStats: session.reactionStats || {},
+      userAverages: session.userAverages || {}
     };
   }
 

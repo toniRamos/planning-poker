@@ -21,6 +21,11 @@ export class UserStoryService {
       throw new Error('Session not found');
     }
 
+    // Don't allow adding stories if session is closed
+    if (session.isClosed) {
+      throw new Error('Session is closed');
+    }
+
     const newUserStory: UserStory = {
       id: uuidv4(),
       title,
@@ -49,6 +54,11 @@ export class UserStoryService {
     const session = await this.sessionRepository.findById(sessionId);
     if (!session) {
       throw new Error('Session not found');
+    }
+
+    // Don't allow updating stories if session is closed
+    if (session.isClosed) {
+      throw new Error('Session is closed');
     }
 
     const userStoryIndex = session.userStories.findIndex((us: UserStory) => us.id === userStoryId);
@@ -93,6 +103,11 @@ export class UserStoryService {
       throw new Error('Session not found');
     }
 
+    // Don't allow changing current story if session is closed
+    if (session.isClosed) {
+      throw new Error('Session is closed');
+    }
+
     const userStory = session.userStories.find((us: UserStory) => us.id === userStoryId);
     if (!userStory) {
       throw new Error('User story not found');
@@ -129,6 +144,11 @@ export class UserStoryService {
     const session = await this.sessionRepository.findById(sessionId);
     if (!session) {
       throw new Error('Session not found');
+    }
+
+    // Don't allow deleting stories if session is closed
+    if (session.isClosed) {
+      throw new Error('Session is closed');
     }
 
     const userStoryIndex = session.userStories.findIndex((us: UserStory) => us.id === userStoryId);

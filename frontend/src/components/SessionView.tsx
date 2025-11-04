@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header, JoinForm } from './';
 import UsersList from './UsersList';
+import { ParticipationSummary } from './ParticipationSummary';
 
 import { UserStoryManager } from '../modules/shared/components/UserStoryManager';
 import { VotingPanel } from '../modules/shared/components/VotingPanel';
@@ -27,9 +28,12 @@ interface Session {
   createdBy: string;
   createdAt: string;
   isActive: boolean;
+  isClosed: boolean;
   maxUsers: number;
   userStories: UserStory[];
   currentStoryId?: string;
+  reactionStats?: { [userId: string]: { [emoji: string]: number } };
+  userAverages?: { [userId: string]: number };
   settings: {
     allowSpectators: boolean;
     autoRevealCards: boolean;
@@ -154,10 +158,18 @@ const SessionView: React.FC = () => {
 
     socket.on('role-changed', handleRoleChanged);
     socket.on('role-change-success', handleRoleChangeSuccess);
+    
+    // Listen for session-closed event
+    const handleSessionClosed = () => {
+      console.log('Session closed event received');
+      refreshSession();
+    };
+    socket.on('session-closed', handleSessionClosed);
 
     return () => {
       socket.off('role-changed', handleRoleChanged);
       socket.off('role-change-success', handleRoleChangeSuccess);
+      socket.off('session-closed', handleSessionClosed);
     };
   }, [socket, refreshSession]);
 
@@ -439,6 +451,8 @@ const SessionView: React.FC = () => {
                   currentStoryId={session.currentStoryId}
                   onStoryChange={refreshSession}
                   socket={socket}
+                  sessionClosed={session.isClosed}
+                  onSessionClose={refreshSession}
                 />
                 
                 {/* Voting Panel */}
@@ -455,7 +469,17 @@ const SessionView: React.FC = () => {
                   isCreator={currentUser.role === UserRole.ADMIN}
                   socket={socket}
                   onRevealVotes={refreshSession}
+                  sessionClosed={session.isClosed}
                 />
+                
+                {/* Participation Summary (shown when session is closed) */}
+                {session.isClosed && (
+                  <ParticipationSummary 
+                    users={users}
+                    reactionStats={session.reactionStats || {}}
+                    userAverages={session.userAverages || {}}
+                  />
+                )}
                 
                 {/* User Sidebar */}
                 <div className={`user-sidebar ${showUsersPanel ? 'open' : ''}`}>

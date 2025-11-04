@@ -20,10 +20,13 @@ export interface Session {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+  isClosed: boolean;
   maxUsers?: number;
   settings?: SessionSettings;
   userStories: UserStory[];
   currentStoryId?: string;
+  reactionStats?: { [userId: string]: { [emoji: string]: number } };
+  userAverages?: { [userId: string]: number };
 }
 
 export interface SessionSettings {

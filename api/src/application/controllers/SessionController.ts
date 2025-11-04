@@ -1,9 +1,16 @@
 import { Request, Response } from 'express';
 import { SessionService } from '../services/SessionService';
 import { CreateSessionRequest, UpdateSessionRequest } from '../../domain/entities/Session';
+import { Server as SocketIOServer } from 'socket.io';
 
 export class SessionController {
+  private io?: SocketIOServer;
+
   constructor(private sessionService: SessionService) {}
+
+  setIO(io: SocketIOServer) {
+    this.io = io;
+  }
 
   /**
    * @swagger
@@ -242,6 +249,71 @@ export class SessionController {
       console.error('Error deleting session:', error);
       res.status(500).json({
         error: 'Failed to delete session'
+      });
+    }
+  };
+
+  closeSession = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const closedSession = await this.sessionService.closeSession(id);
+
+      if (!closedSession) {
+        res.status(404).json({
+          error: 'Session not found'
+        });
+        return;
+      }
+
+      // Emit WebSocket event to notify all clients
+      if (this.io) {
+        this.io.to(id).emit('session-closed', {
+          sessionId: id,
+          message: 'Session has been closed'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: closedSession
+      });
+    } catch (error) {
+      console.error('Error closing session:', error);
+      res.status(500).json({
+        error: 'Failed to close session'
+      });
+    }
+  };
+
+  recordReaction = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { userId, emoji } = req.body;
+
+      if (!userId || !emoji) {
+        res.status(400).json({
+          error: 'userId and emoji are required'
+        });
+        return;
+      }
+
+      const updatedSession = await this.sessionService.recordReaction(id, userId, emoji);
+
+      if (!updatedSession) {
+        res.status(404).json({
+          error: 'Session not found'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: updatedSession
+      });
+    } catch (error) {
+      console.error('Error recording reaction:', error);
+      res.status(500).json({
+        error: 'Failed to record reaction'
       });
     }
   };

@@ -1,0 +1,188 @@
+.participation-summary {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: var(--card-bg, #ffffff);
+  border: 2px solid var(--primary-color, #007bff);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color, #dee2e6);
+}
+
+.summary-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color, #212529);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 0.75rem;
+}
+
+.stat-item {
+  font-size: 1rem;
+  color: var(--text-muted, #6c757d);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.participants-list h4 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color, #212529);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.participants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.participant-card {
+  padding: 1rem;
+  background: var(--bg-color, #f8f9fa);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.participant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.participant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+}
+
+.participant-name {
+  font-weight: 600;
+  color: var(--text-color, #212529);
+  font-size: 1rem;
+}
+
+.participant-role {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--primary-color, #007bff);
+  color: white;
+  border-radius: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.participant-average {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.participant-average strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+.participant-reactions {
+  min-height: 60px;
+}
+
+.reactions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.reaction-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.reaction-count {
+  font-size: 0.8rem;
+  color: var(--text-muted, #6c757d);
+  font-weight: 600;
+}
+
+.total-reactions {
+  font-size: 0.85rem;
+  color: var(--text-muted, #6c757d);
+  font-weight: 500;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-color, #dee2e6);
+}
+
+.no-reactions {
+  color: var(--text-muted, #6c757d);
+  font-style: italic;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+/* Dark mode support */
+body.dark-mode .participation-summary {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .summary-header h3,
+body.dark-mode .participants-list h4,
+body.dark-mode .participant-name {
+  color: var(--text-color);
+}
+
+body.dark-mode .participant-card {
+  background: var(--bg-color);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .reaction-item {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .participation-summary {
+    padding: 1.5rem;
+  }
+
+  .participants-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

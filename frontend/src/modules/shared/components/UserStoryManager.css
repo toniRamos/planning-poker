@@ -539,3 +539,29 @@ body.dark-mode .story-item.current {
 body.dark-mode .story-tag {
   box-shadow: 0 2px 4px rgba(102, 126, 234, 0.5);
 }
+
+/* Session Closed Badge */
+.session-closed-badge {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--radius-xl);
+  font-weight: var(--font-semibold);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}

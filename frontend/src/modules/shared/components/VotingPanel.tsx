@@ -32,6 +32,7 @@ interface VotingPanelProps {
   isCreator: boolean;
   socket?: any;
   onRevealVotes?: () => void;
+  sessionClosed?: boolean;
 }
 
 const CARD_VALUES = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
@@ -61,7 +62,8 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   currentStory,
   isCreator,
   socket,
-  onRevealVotes
+  onRevealVotes,
+  sessionClosed
 }) => {
   const [votes, setVotes] = useState<Vote[]>([]);
   const [myVote, setMyVote] = useState<string | null>(null);
@@ -474,7 +476,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
         </div>
 
         {/* Reactions Section - Always available */}
-        {!currentUser?.isSpectator && reactionsEnabled && (
+        {!currentUser?.isSpectator && reactionsEnabled && !sessionClosed && (
           <div className="reactions-section">
             <div className="reactions-header">
               <h4>React to the session:</h4>
@@ -537,7 +539,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       </div>
 
       {/* Voting Cards */}
-      {!currentUser?.isSpectator && !isCreator && !votesRevealed && (
+      {!currentUser?.isSpectator && !isCreator && !votesRevealed && !sessionClosed && (
         <div className="voting-section">
           <h4>Select your estimate:</h4>
           <div className="voting-cards">
@@ -567,7 +569,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       )}
 
       {/* Reactions Section */}
-      {!currentUser?.isSpectator && reactionsEnabled && (
+      {!currentUser?.isSpectator && reactionsEnabled && !sessionClosed && (
         <div className="reactions-section">
           <div className="reactions-header">
             <h4>React to the session:</h4>

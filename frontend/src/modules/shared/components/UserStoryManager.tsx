@@ -20,6 +20,8 @@ interface UserStoryManagerProps {
   currentStoryId?: string;
   onStoryChange?: () => void;
   socket?: any; // Socket instance to emit events
+  sessionClosed?: boolean;
+  onSessionClose?: () => void;
 }
 
 export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
@@ -27,7 +29,9 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   isCreator,
   currentStoryId,
   onStoryChange,
-  socket
+  socket,
+  sessionClosed = false,
+  onSessionClose
 }) => {
   const [userStories, setUserStories] = useState<UserStory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -355,6 +359,29 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
     }
   };
 
+  const closeSession = async () => {
+    if (!window.confirm('Are you sure you want to close this session? This action cannot be undone and will lock the session permanently.')) return;
+
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/close`, {
+        method: 'PUT',
+      });
+
+      if (response.ok) {
+        // Emit WebSocket event to notify other users
+        if (socket) {
+          socket.emit('session-closed', {
+            sessionId
+          });
+        }
+
+        onSessionClose?.();
+      }
+    } catch (error) {
+      console.error('Error closing session:', error);
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedItem(index);
   };
@@ -382,7 +409,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
     <div className="user-story-manager">
       <div className="story-header">
         <h3>User storys ({userStories.length})</h3>
-        {isCreator && (
+        {isCreator && !sessionClosed && (
           <div className="story-actions">
             <button 
               className="btn btn-primary"
@@ -390,6 +417,17 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
             >
               + Add Story
             </button>
+            <button 
+              className="btn btn-danger"
+              onClick={closeSession}
+            >
+              🔒 Close Session
+            </button>
+          </div>
+        )}
+        {sessionClosed && (
+          <div className="session-closed-badge">
+            <span>🔒 Session Closed</span>
           </div>
         )}
       </div>
@@ -537,7 +575,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                 )}
               </div>
 
-              {isCreator && (
+              {isCreator && !sessionClosed && (
                 <div className="story-actions-item">
                   {currentStoryId !== story.id && (
                     <button
