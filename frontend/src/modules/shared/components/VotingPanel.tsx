@@ -77,13 +77,19 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
 
   useEffect(() => {
     if (currentStory) {
+      // Reset states when story changes to allow new voting
+      setVotesRevealed(false);
+      setAutoRevealed(false);
+      setMyVote(null);
+      setSelectedCard(null);
+      
+      // Fetch votes for the new story
       fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
-      // DON'T reset votesRevealed from backend - only use WebSocket events
-      setSelectedCard(null); // Clear visual selection when story changes
     } else {
       setVotes([]);
       setMyVote(null);
       setVotesRevealed(false);
+      setAutoRevealed(false);
       setSelectedCard(null); // Clear visual selection when no story
     }
   }, [currentStory]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -265,6 +271,14 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
         const fetchedVotes = await response.json();
         console.log('Fetched votes:', fetchedVotes); // Debug line
         setVotes(fetchedVotes);
+        
+        // Check if votes are revealed for this specific story
+        if (fetchedVotes.length > 0) {
+          const allRevealed = fetchedVotes.every((vote: Vote) => vote.isRevealed);
+          if (allRevealed && fetchedVotes[0].isRevealed) {
+            setVotesRevealed(true);
+          }
+        }
         
         // Find my vote
         if (currentUser) {
