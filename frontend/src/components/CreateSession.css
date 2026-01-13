@@ -1,25 +1,59 @@
-/* CreateSession.css */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CREATE SESSION — Editorial Poker Night
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .create-session-container {
   min-height: 100vh;
-  background: var(--neutral-50);
-  padding: var(--spacing-6);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--space-8);
+  background: var(--bg-base);
+  position: relative;
 }
 
+/* Decorative gradient orbs */
+.create-session-container::before,
+.create-session-container::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.create-session-container::before {
+  width: 500px;
+  height: 500px;
+  background: var(--emerald-500);
+  top: -100px;
+  right: -100px;
+}
+
+.create-session-container::after {
+  width: 400px;
+  height: 400px;
+  background: var(--coral-500);
+  bottom: -50px;
+  left: -50px;
+}
+
+/* ═══════════ MAIN CARD ═══════════ */
 .create-session-card {
-  background: white;
+  position: relative;
+  z-index: 1;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-2xl);
-  padding: var(--spacing-12);
-  max-width: 700px;
+  padding: var(--space-12);
+  max-width: 640px;
   width: 100%;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--neutral-200);
-  animation: slideUp 0.6s ease-out;
+  box-shadow: var(--shadow-2xl);
+  animation: cardSlideUp 0.6s var(--ease-out);
 }
 
-@keyframes slideUp {
+@keyframes cardSlideUp {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -31,75 +65,85 @@
 }
 
 .create-session-card h1 {
-  margin: 0 0 var(--spacing-3) 0;
-  color: var(--neutral-900);
+  font-family: var(--font-display);
   font-size: var(--text-4xl);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
   text-align: center;
-  font-weight: var(--font-bold);
-  letter-spacing: -0.025em;
+  margin: 0 0 var(--space-3) 0;
 }
 
 .subtitle {
   text-align: center;
-  color: var(--neutral-600);
-  margin-bottom: var(--spacing-10);
+  color: var(--text-secondary);
   font-size: var(--text-lg);
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-10);
 }
 
+/* ═══════════ FORM STYLES ═══════════ */
 .create-session-form {
-  margin-bottom: var(--spacing-10);
+  margin-bottom: var(--space-10);
 }
 
 .form-group {
-  margin-bottom: var(--spacing-6);
+  margin-bottom: var(--space-6);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-6);
+  gap: var(--space-6);
   align-items: end;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: var(--spacing-2);
-  font-weight: var(--font-semibold);
-  color: var(--neutral-800);
+  margin-bottom: var(--space-2);
   font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: var(--spacing-4);
-  border: 1px solid var(--neutral-300);
+  padding: var(--space-4);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
+  font-family: var(--font-body);
   font-size: var(--text-base);
-  transition: all var(--transition-base);
-  box-sizing: border-box;
-  font-family: inherit;
-  background-color: var(--neutral-50);
+  color: var(--text-primary);
+  transition: all var(--duration-fast) var(--ease-out);
+  resize: vertical;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px var(--primary-100);
-  background-color: white;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-muted);
+  background: var(--bg-surface);
 }
 
 .form-group textarea {
-  resize: vertical;
-  min-height: 80px;
+  min-height: 100px;
 }
 
+/* ═══════════ CHECKBOX ═══════════ */
 .checkbox-group {
   display: flex;
   align-items: center;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .checkbox-group label {
@@ -107,76 +151,113 @@
   align-items: center;
   cursor: pointer;
   margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-primary);
+  font-size: var(--text-base);
 }
 
 .checkbox-group input[type="checkbox"] {
-  width: auto;
-  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--space-3);
+  accent-color: var(--emerald-500);
   cursor: pointer;
-  transform: scale(1.2);
 }
 
 .checkbox-label {
   font-weight: 500;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
+/* ═══════════ ERROR MESSAGE ═══════════ */
 .error-message {
-  background: #ffebee;
-  border: 1px solid #f44336;
-  color: #c62828;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  background: var(--error-muted);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--coral-400);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-6);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
+/* ═══════════ CREATE BUTTON ═══════════ */
 .create-button {
   width: 100%;
-  padding: var(--spacing-5);
-  background: var(--primary-600);
+  padding: var(--space-5);
+  background: linear-gradient(135deg, var(--emerald-600) 0%, var(--emerald-500) 100%);
   color: white;
-  border: none;
-  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
   font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  border: none;
+  border-radius: var(--radius-xl);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all var(--duration-base) var(--ease-out);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+}
+
+.create-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity var(--duration-fast);
 }
 
 .create-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-  background: var(--primary-700);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl), 0 0 40px rgba(16, 185, 129, 0.4);
 }
 
-.create-button:active {
+.create-button:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.create-button:active:not(:disabled) {
   transform: translateY(0);
 }
 
 .create-button:disabled {
-  background: var(--neutral-400);
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
   box-shadow: var(--shadow-sm);
 }
 
+/* ═══════════ INFO SECTION ═══════════ */
 .info-section {
-  background: var(--primary-50);
-  padding: var(--spacing-8);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  border-left: 4px solid var(--primary-600);
-  border: 1px solid var(--primary-200);
+  padding: var(--space-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.info-section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--emerald-500) 0%, var(--emerald-600) 100%);
 }
 
 .info-section h3 {
-  margin: 0 0 var(--spacing-4) 0;
-  color: var(--neutral-900);
+  font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: var(--font-semibold);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-5) 0;
 }
 
 .info-section ul {
@@ -186,136 +267,151 @@
 }
 
 .info-section li {
-  padding: var(--spacing-2) 0;
-  color: var(--neutral-700);
-  font-size: var(--text-base);
   display: flex;
   align-items: flex-start;
-  line-height: 1.6;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
 }
 
 .info-section li::before {
   content: '';
   width: 6px;
   height: 6px;
-  background: var(--primary-600);
-  border-radius: 50%;
-  margin: 10px var(--spacing-3) 0 0;
+  background: var(--emerald-500);
+  border-radius: var(--radius-full);
+  margin-top: 8px;
   flex-shrink: 0;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .create-session-container {
-    padding: 10px;
-    align-items: flex-start;
-    padding-top: 20px;
-  }
-  
-  .create-session-card {
-    padding: 25px;
-    border-radius: 15px;
-  }
-  
-  .create-session-card h1 {
-    font-size: 1.8rem;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  
-  .subtitle {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .create-session-card {
-    padding: 20px;
-    border-radius: 12px;
-  }
-  
-  .create-session-card h1 {
-    font-size: 1.6rem;
-  }
-  
-  .form-group input,
-  .form-group textarea {
-    padding: 12px 14px;
-    font-size: 0.95rem;
-  }
-  
-  .create-button {
-    font-size: 1rem;
-    padding: 14px;
-  }
-}
-
-/* Role information styles */
+/* ═══════════ ROLE INFO ═══════════ */
 .role-info {
-  margin-top: 25px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border-left: 4px solid #007bff;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .role-info h4 {
-  margin: 0 0 15px 0;
-  color: #495057;
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-5) 0;
 }
 
 .role-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
 }
 
 .role-card {
   display: flex;
   align-items: center;
-  padding: 12px;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  transition: all var(--duration-fast) var(--ease-out);
 }
 
 .role-card:hover {
+  border-color: var(--border-emphasis);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .role-card.admin {
-  border-left: 4px solid #dc3545;
+  border-left: 3px solid var(--coral-500);
 }
 
 .role-card.player {
-  border-left: 4px solid #28a745;
+  border-left: 3px solid var(--emerald-500);
 }
 
 .role-card.viewer {
-  border-left: 4px solid #6c757d;
+  border-left: 3px solid var(--ink-500);
 }
 
 .role-icon {
   font-size: 1.5rem;
-  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .role-content h5 {
-  margin: 0 0 4px 0;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: #495057;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
 }
 
 .role-content p {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
   margin: 0;
-  font-size: 0.8rem;
-  color: #6c757d;
-  line-height: 1.3;
+  line-height: var(--leading-snug);
+}
+
+/* ═══════════ RESPONSIVE ═══════════ */
+@media (max-width: 768px) {
+  .create-session-container {
+    padding: var(--space-4);
+    align-items: flex-start;
+    padding-top: var(--space-8);
+  }
+  
+  .create-session-card {
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+  }
+  
+  .create-session-card h1 {
+    font-size: var(--text-2xl);
+  }
+  
+  .subtitle {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-8);
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .role-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-section {
+    padding: var(--space-5);
+  }
+}
+
+@media (max-width: 480px) {
+  .create-session-card {
+    padding: var(--space-5);
+  }
+  
+  .create-session-card h1 {
+    font-size: var(--text-xl);
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    padding: var(--space-3);
+    font-size: var(--text-sm);
+  }
+  
+  .create-button {
+    padding: var(--space-4);
+    font-size: var(--text-base);
+  }
+  
+  .role-card {
+    padding: var(--space-3);
+  }
 }

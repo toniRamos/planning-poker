@@ -22,25 +22,24 @@ const Header: React.FC<HeaderProps> = ({
   onChangeName,
   onShareSession
 }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    // Load dark mode preference from localStorage
-    const saved = localStorage.getItem('darkMode');
+  // Dark mode is now default, light mode is the toggle
+  const [lightMode, setLightMode] = useState(() => {
+    const saved = localStorage.getItem('lightMode');
     return saved === 'true';
   });
 
   useEffect(() => {
-    // Apply dark mode class to body
-    if (darkMode) {
-      document.body.classList.add('dark-mode');
+    // Apply light mode class to body (dark is default)
+    if (lightMode) {
+      document.body.classList.add('light-mode');
     } else {
-      document.body.classList.remove('dark-mode');
+      document.body.classList.remove('light-mode');
     }
-    // Save preference to localStorage
-    localStorage.setItem('darkMode', String(darkMode));
-  }, [darkMode]);
+    localStorage.setItem('lightMode', String(lightMode));
+  }, [lightMode]);
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
+  const toggleTheme = () => {
+    setLightMode(!lightMode);
   };
 
   return (
@@ -84,11 +83,11 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         )}
         
-        {/* Dark Mode Toggle */}
+        {/* Theme Toggle */}
         <div 
           className="dark-mode-toggle" 
-          onClick={toggleDarkMode}
-          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          onClick={toggleTheme}
+          title={lightMode ? 'Switch to dark mode' : 'Switch to light mode'}
         >
           <span className="toggle-icon sun-icon">☀️</span>
           <span className="toggle-icon moon-icon">🌙</span>

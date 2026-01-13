@@ -1,124 +1,142 @@
-/* Role selection styles */
+/* ═══════════════════════════════════════════════════════════════════════════
+   JOIN FORM — Editorial Poker Night
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════ ROLE SELECTION ═══════════ */
 .role-selection {
-  margin: var(--spacing-6) 0;
-  padding: var(--spacing-5);
-  background: var(--neutral-50);
-  border: 1px solid var(--neutral-200);
+  margin: var(--space-8) 0;
+  padding: var(--space-6);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
 }
 
-.role-selection label {
+.role-selection > label {
   display: block;
-  margin-bottom: var(--spacing-3);
-  font-weight: var(--font-semibold);
-  color: var(--neutral-800);
+  margin-bottom: var(--space-4);
   font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
 }
 
 .role-options {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-3);
+  gap: var(--space-3);
 }
 
 .role-option {
   display: flex;
   align-items: center;
-  padding: var(--spacing-4);
-  background: white;
-  border: 1px solid var(--neutral-300);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all var(--duration-base) var(--ease-out);
+  position: relative;
 }
 
 .role-option:hover {
-  border-color: var(--primary-500);
-  background-color: var(--primary-50);
-  box-shadow: var(--shadow-sm);
+  border-color: var(--accent-primary);
+  background: var(--bg-elevated);
+  transform: translateX(4px);
 }
 
 .role-option input[type="radio"] {
-  margin-right: var(--spacing-3);
-  margin-top: 0;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--space-4);
+  accent-color: var(--emerald-500);
   cursor: pointer;
-  accent-color: var(--primary-600);
-}
-
-.role-option input[type="radio"]:checked + .role-label {
-  color: var(--primary-700);
+  flex-shrink: 0;
 }
 
 .role-option:has(input:checked) {
-  border-color: var(--primary-500);
-  background-color: var(--primary-50);
-  box-shadow: var(--shadow-md);
+  border-color: var(--emerald-500);
+  background: var(--accent-primary-muted);
+  box-shadow: 0 0 0 1px var(--emerald-500), var(--shadow-md);
+}
+
+.role-option:has(input:checked)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--emerald-500);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
 }
 
 .role-label {
-  font-size: var(--text-sm);
-  line-height: 1.5;
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: var(--leading-snug);
   cursor: pointer;
-  color: var(--neutral-700);
 }
 
 .role-label strong {
-  font-weight: var(--font-semibold);
-  color: var(--neutral-900);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* Join buttons */
+/* ═══════════ JOIN BUTTONS ═══════════ */
 .join-buttons {
-  margin-top: var(--spacing-6);
+  margin-top: var(--space-8);
   display: flex;
   justify-content: center;
 }
 
 .join-buttons button {
-  background: var(--primary-600);
+  min-width: 200px;
+  padding: var(--space-4) var(--space-8);
+  background: linear-gradient(135deg, var(--emerald-600) 0%, var(--emerald-500) 100%);
   color: white;
-  border: none;
-  padding: var(--spacing-4) var(--spacing-8);
-  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
   font-size: var(--text-base);
-  font-weight: var(--font-semibold);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  border: none;
+  border-radius: var(--radius-xl);
   cursor: pointer;
-  transition: all var(--transition-base);
-  min-width: 160px;
-  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-base) var(--ease-out);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
 .join-buttons button:hover:not(:disabled) {
-  background: var(--primary-700);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl), 0 0 40px rgba(16, 185, 129, 0.4);
 }
 
 .join-buttons button:disabled {
-  background: var(--neutral-400);
+  opacity: 0.5;
   cursor: not-allowed;
-  opacity: 0.7;
   transform: none;
+  box-shadow: var(--shadow-sm);
 }
 
-/* Responsive design */
+/* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width: 768px) {
-  .role-options {
-    gap: 8px;
+  .role-selection {
+    padding: var(--space-4);
+    margin: var(--space-6) 0;
   }
   
   .role-option {
-    padding: 10px;
-    font-size: 13px;
+    padding: var(--space-3) var(--space-4);
   }
   
   .role-label {
-    font-size: 13px;
+    font-size: var(--text-sm);
   }
   
   .join-buttons button {
-    padding: 10px 20px;
-    font-size: 14px;
-    min-width: 140px;
+    width: 100%;
+    padding: var(--space-4);
+    font-size: var(--text-sm);
+    min-width: auto;
   }
 }
