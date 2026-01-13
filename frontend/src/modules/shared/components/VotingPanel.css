@@ -64,6 +64,18 @@
   color: var(--text-muted);
 }
 
+.no-story-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-4);
+  opacity: 0.8;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 .no-story h3 {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
@@ -76,6 +88,13 @@
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: var(--space-2) 0;
+}
+
+.no-story-hint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: var(--space-4) !important;
 }
 
 /* ═══════════ VOTING SECTION ═══════════ */
@@ -260,15 +279,46 @@
 /* ═══════════ VOTE STATUS ═══════════ */
 .vote-status {
   margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+}
+
+.vote-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
 }
 
 .vote-status h4 {
-  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.vote-count-badge {
+  background: var(--accent-primary-muted);
+  color: var(--emerald-400);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wider);
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-4) 0;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.no-votes-yet {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+}
+
+.no-votes-yet p {
+  margin: 0;
+  font-size: var(--text-sm);
 }
 
 .vote-cards {
@@ -393,16 +443,18 @@
 }
 
 .voters-list {
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
   padding: var(--space-3) var(--space-4);
-  background: var(--bg-muted);
+  background: var(--bg-surface);
   border-radius: var(--radius-lg);
   border-left: 3px solid var(--emerald-500);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
 }
 
-.voters-list small {
-  color: var(--text-secondary);
-  font-weight: 500;
+.voters-label {
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* ═══════════ VOTING ACTIONS ═══════════ */

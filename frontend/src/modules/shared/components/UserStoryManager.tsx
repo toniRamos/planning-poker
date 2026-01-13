@@ -408,7 +408,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   return (
     <div className="user-story-manager">
       <div className="story-header">
-        <h3>User storys ({userStories.length})</h3>
+        <h3>User Stories ({userStories.length})</h3>
         {isCreator && !sessionClosed && (
           <div className="story-actions">
             <button 
@@ -527,9 +527,20 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       <div className="stories-list">
         {userStories.length === 0 ? (
           <div className="empty-state">
-            <p>No user stories yet.</p>
-            {isCreator && (
-              <p>Add stories to start estimating.</p>
+            <div className="empty-state-icon">📋</div>
+            <h4>No stories yet</h4>
+            {isCreator ? (
+              <>
+                <p>Add your first user story to start estimating with your team.</p>
+                <button 
+                  className="btn btn-primary empty-state-cta"
+                  onClick={() => setShowAddForm(true)}
+                >
+                  + Add First Story
+                </button>
+              </>
+            ) : (
+              <p>Waiting for the admin to add stories...</p>
             )}
           </div>
         ) : (
@@ -589,7 +600,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     <button
                       className="btn btn-sm btn-warning"
                       onClick={() => resetUserStoryVoting(story.id)}
-                      title="Resetear votación y volver a estimar"
+                      title="Reset votes and re-estimate this story"
                     >
                       🔄 Re-estimate
                     </button>

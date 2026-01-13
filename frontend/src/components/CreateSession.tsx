@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import './CreateSession.css';
 
 interface SessionData {
@@ -18,11 +18,17 @@ const CreateSession: React.FC = () => {
     description: '',
     createdBy: '',
     creatorName: '',
-    maxUsers: 10, // Valor por defecto, no mostrado al usuario
-    allowSpectators: true // Valor por defecto, no mostrado al usuario
+    maxUsers: 10,
+    allowSpectators: true
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-focus first input on mount
+  useEffect(() => {
+    const nameInput = document.getElementById('name');
+    if (nameInput) nameInput.focus();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -89,9 +95,13 @@ const CreateSession: React.FC = () => {
 
   return (
     <div className="create-session-container">
+      <Link to="/" className="back-link">
+        ← Back to Home
+      </Link>
+      
       <div className="create-session-card">
-        <h1>🃏 Create Planning Poker Session</h1>
-        <p className="subtitle">Set up a new session for your team's estimation meeting</p>
+        <h1>🃏 Create New Session</h1>
+        <p className="subtitle">Set up a planning poker session for your team's estimation meeting</p>
 
         <form onSubmit={handleSubmit} className="create-session-form">
           <div className="form-group">
@@ -143,10 +153,20 @@ const CreateSession: React.FC = () => {
 
           <button 
             type="submit" 
-            className="create-button"
+            className={`create-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading || !formData.name.trim() || !formData.creatorName.trim()}
           >
-            {isLoading ? '🔄 Creating...' : '🚀 Create Session'}
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                Creating session...
+              </>
+            ) : (
+              <>
+                <span className="btn-icon">🚀</span>
+                Create Session
+              </>
+            )}
           </button>
         </form>
 

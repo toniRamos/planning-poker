@@ -313,18 +313,24 @@ body.light-mode::before {
 }
 
 /* ═══════════ BUTTONS ═══════════ */
-.action-buttons {
+/* ═══════════ HOME ACTIONS ═══════════ */
+.home-actions {
   display: flex;
-  justify-content: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .create-session-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-8);
+  width: 100%;
+  padding: var(--space-5) var(--space-8);
   background: linear-gradient(135deg, var(--emerald-600) 0%, var(--emerald-500) 100%);
   color: white;
   font-family: var(--font-body);
@@ -343,6 +349,128 @@ body.light-mode::before {
   transform: translateY(-2px);
   box-shadow: var(--shadow-xl), 0 0 30px rgba(16, 185, 129, 0.4);
   background: linear-gradient(135deg, var(--emerald-500) 0%, var(--emerald-400) 100%);
+}
+
+.btn-icon {
+  font-size: var(--text-xl);
+}
+
+/* ═══════════ DIVIDER ═══════════ */
+.divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: var(--space-4);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-default);
+}
+
+.divider span {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  white-space: nowrap;
+}
+
+/* ═══════════ JOIN SESSION FORM ═══════════ */
+.join-session-form {
+  width: 100%;
+}
+
+.join-input-wrapper {
+  display: flex;
+  gap: var(--space-2);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: var(--space-2);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.join-input-wrapper:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-muted);
+}
+
+.join-session-input {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+.join-session-input::placeholder {
+  color: var(--text-muted);
+}
+
+.join-session-input:focus {
+  outline: none;
+}
+
+.join-session-btn {
+  padding: var(--space-3) var(--space-6);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.join-session-btn:hover:not(:disabled) {
+  background: var(--emerald-600);
+  color: white;
+}
+
+.join-session-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.join-error {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--coral-400);
+  text-align: center;
+}
+
+/* ═══════════ HOME HEADER ═══════════ */
+.home-header {
+  justify-content: center;
+  border-bottom: none;
+  background: transparent;
+  padding-top: var(--space-8);
+}
+
+.home-header h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+}
+
+/* ═══════════ HOME FOOTER ═══════════ */
+.home-footer {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.home-footer p {
+  margin: 0;
 }
 
 /* ═══════════ HEADER BASE STYLES ═══════════ */
@@ -609,32 +737,83 @@ body.light-mode .app-header {
   border-radius: var(--radius-full);
 }
 
-/* ═══════════ USER VOTING STATUS ═══════════ */
+/* ═══════════ USER VOTING STATUS (Poker Card) ═══════════ */
 .user-voting-status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
+  height: 38px;
+  border-radius: 4px;
   transition: all var(--duration-fast) var(--ease-out);
-  border: 1px solid var(--border-default);
   flex-shrink: 0;
+  position: relative;
 }
 
-.user-voting-status.not-voted {
-  background: transparent;
-  color: var(--text-muted);
-  border-style: dashed;
-  opacity: 0.5;
+.voting-card-visual {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.user-voting-status.voted {
-  background: var(--emerald-600);
+.card-inner {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* Card back (not voted) - classic poker card back pattern */
+.user-voting-status.not-voted .voting-card-visual {
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      var(--coral-600) 0px,
+      var(--coral-600) 2px,
+      var(--coral-700) 2px,
+      var(--coral-700) 4px
+    );
+  border: 2px solid var(--coral-500);
+  opacity: 0.7;
+}
+
+.user-voting-status.not-voted .card-inner {
   color: white;
-  border-color: var(--emerald-500);
-  box-shadow: var(--shadow-sm);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Card front (voted) - clean face-up card */
+.user-voting-status.voted .voting-card-visual {
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border: 2px solid var(--emerald-500);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 0 8px rgba(16, 185, 129, 0.4);
+  animation: cardFlip 0.4s ease-out;
+}
+
+.user-voting-status.voted .card-inner {
+  color: var(--emerald-600);
+  font-size: 1rem;
+}
+
+@keyframes cardFlip {
+  0% { 
+    transform: rotateY(90deg) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: rotateY(-10deg) scale(1.05);
+  }
+  100% { 
+    transform: rotateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 /* ═══════════ MODAL STYLES ═══════════ */

@@ -470,9 +470,14 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
     return (
       <div className="voting-panel">
         <div className="no-story">
-          <h3>🗳️ Voting</h3>
-          <p>No story selected for estimation.</p>
-          <p>The session creator needs to select a story to start voting.</p>
+          <div className="no-story-icon">🎴</div>
+          <h3>Ready to Vote</h3>
+          <p>Waiting for a story to be selected...</p>
+          {isCreator ? (
+            <p className="no-story-hint">👆 Select a story above to start estimation</p>
+          ) : (
+            <p className="no-story-hint">The admin will select a story to estimate soon</p>
+          )}
         </div>
 
         {/* Reactions Section - Always available */}
@@ -631,32 +636,46 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
 
       {/* Vote Status */}
       <div className="vote-status">
-        <h4>Voting Status</h4>
-        <div className="vote-cards">
-          {votes.map((vote, index) => {
-            const isRevealed = vote.isRevealed || votesRevealed;
-            const valueClass = isRevealed ? getCardValueClass(vote.points) : '';
-            
-            return (
-              <div
-                key={vote.id}
-                className={`vote-card ${isRevealed ? 'revealed' : 'hidden'} ${valueClass}`}
-              >
-                {isRevealed ? vote.points : '?'}
-                <div className="vote-user">{vote.userName?.trim() || 'Usuario'}</div>
-              </div>
-            );
-          })}
-        </div>
-        
-        <div className="vote-summary">
-          {votes.length} vote{votes.length !== 1 ? 's' : ''} submitted
+        <div className="vote-status-header">
+          <h4>Votes</h4>
           {!votesRevealed && votes.length > 0 && (
-            <div className="voters-list">
-              <small>Voted: {votes.map(vote => vote.userName?.trim() || 'Usuario').join(', ')}</small>
-            </div>
+            <span className="vote-count-badge">
+              {votes.length} submitted
+            </span>
           )}
         </div>
+        
+        {votes.length > 0 ? (
+          <>
+            <div className="vote-cards">
+              {votes.map((vote, index) => {
+                const isRevealed = vote.isRevealed || votesRevealed;
+                const valueClass = isRevealed ? getCardValueClass(vote.points) : '';
+                
+                return (
+                  <div
+                    key={vote.id}
+                    className={`vote-card ${isRevealed ? 'revealed' : 'hidden'} ${valueClass}`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {isRevealed ? vote.points : '🃏'}
+                    <div className="vote-user">{vote.userName?.trim() || 'User'}</div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {!votesRevealed && (
+              <div className="voters-list">
+                <span className="voters-label">Voted:</span> {votes.map(vote => vote.userName?.trim() || 'User').join(', ')}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="no-votes-yet">
+            <p>🎴 No votes yet — waiting for players...</p>
+          </div>
+        )}
       </div>
 
       {/* Results Section - ONLY shown to ALL users when votes are revealed */}
@@ -739,7 +758,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
               </button>
             ) : (
               <div className="voting-message">
-                <p>Esperando a que el creador revele los votos...</p>
+                <p>⏳ Waiting for admin to reveal votes...</p>
               </div>
             )
           ) : (
@@ -753,7 +772,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
                 </button>
               ) : (
                 <div className="voting-message">
-                  <p>Solo el creador puede iniciar una nueva votación</p>
+                  <p>👑 Only the admin can start a new voting round</p>
                 </div>
               )}
             </div>

@@ -125,8 +125,15 @@ const UsersList: React.FC<UsersListProps> = ({
     const hasVoted = votedUsers.has(user.id);
     
     return (
-      <div className={`user-voting-status ${hasVoted ? 'voted' : 'not-voted'}`}>
-        {hasVoted ? '🃏' : '🂠'}
+      <div 
+        className={`user-voting-status ${hasVoted ? 'voted' : 'not-voted'}`} 
+        title={hasVoted ? 'Vote submitted' : 'Waiting for vote'}
+      >
+        <div className="voting-card-visual">
+          <div className="card-inner">
+            {hasVoted ? '✓' : '?'}
+          </div>
+        </div>
       </div>
     );
   };
