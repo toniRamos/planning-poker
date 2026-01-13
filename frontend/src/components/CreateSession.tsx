@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Icon, ICONS } from './Icons';
 import './CreateSession.css';
 
 interface SessionData {
@@ -96,11 +97,11 @@ const CreateSession: React.FC = () => {
   return (
     <div className="create-session-container">
       <Link to="/" className="back-link">
-        ← Back to Home
+        <Icon name={ICONS.arrowLeft} size={16} /> Back to Home
       </Link>
       
       <div className="create-session-card">
-        <h1>🃏 Create New Session</h1>
+        <h1><Icon name={ICONS.cards} size={32} className="title-icon" /> Create New Session</h1>
         <p className="subtitle">Set up a planning poker session for your team's estimation meeting</p>
 
         <form onSubmit={handleSubmit} className="create-session-form">
@@ -147,7 +148,7 @@ const CreateSession: React.FC = () => {
 
           {error && (
             <div className="error-message">
-              ❌ {error}
+              <Icon name={ICONS.xCircle} size={16} /> {error}
             </div>
           )}
 
@@ -163,7 +164,7 @@ const CreateSession: React.FC = () => {
               </>
             ) : (
               <>
-                <span className="btn-icon">🚀</span>
+                <Icon name={ICONS.rocket} size={18} className="btn-icon" />
                 Create Session
               </>
             )}
@@ -171,33 +172,33 @@ const CreateSession: React.FC = () => {
         </form>
 
         <div className="info-section">
-          <h3>💡 What happens next?</h3>
+          <h3><Icon name={ICONS.info} size={18} /> What happens next?</h3>
           <ul>
-            <li>🎯 You'll enter directly as the <strong>Admin</strong> with full control</li>
-            <li>🔗 Share the session URL with your team members</li>
-            <li>� Team members choose to join as <strong>Players</strong> (can vote) or <strong>Viewers</strong> (observe only)</li>
-            <li>📊 As Admin, you manage user stories and control when votes are revealed</li>
+            <li><Icon name={ICONS.target} size={14} /> You'll enter directly as the <strong>Admin</strong> with full control</li>
+            <li><Icon name={ICONS.link} size={14} /> Share the session URL with your team members</li>
+            <li><Icon name={ICONS.users} size={14} /> Team members choose to join as <strong>Players</strong> (can vote) or <strong>Viewers</strong> (observe only)</li>
+            <li><Icon name={ICONS.chart} size={14} /> As Admin, you manage user stories and control when votes are revealed</li>
           </ul>
           
           <div className="role-info">
-            <h4>🎭 Roles Explained:</h4>
+            <h4><Icon name={ICONS.mask} size={18} /> Roles Explained:</h4>
             <div className="role-cards">
               <div className="role-card admin">
-                <span className="role-icon">👑</span>
+                <span className="role-icon"><Icon name={ICONS.crown} size={24} /></span>
                 <div className="role-content">
                   <h5>Admin</h5>
                   <p>Full control over session, stories, and voting reveals</p>
                 </div>
               </div>
               <div className="role-card player">
-                <span className="role-icon">🎯</span>
+                <span className="role-icon"><Icon name={ICONS.target} size={24} /></span>
                 <div className="role-content">
                   <h5>Player</h5>
                   <p>Participates in voting and estimation discussions</p>
                 </div>
               </div>
               <div className="role-card viewer">
-                <span className="role-icon">👁️</span>
+                <span className="role-icon"><Icon name={ICONS.eye} size={24} /></span>
                 <div className="role-content">
                   <h5>Viewer</h5>
                   <p>Observes the session without voting privileges</p>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as anime from 'animejs';
+import { Icon, ICONS } from '../../../components/Icons';
 import './VotingPanel.css';
 
 interface Vote {
@@ -470,11 +471,11 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
     return (
       <div className="voting-panel">
         <div className="no-story">
-          <div className="no-story-icon">🎴</div>
+          <div className="no-story-icon"><Icon name={ICONS.cardDeck} size={48} /></div>
           <h3>Ready to Vote</h3>
           <p>Waiting for a story to be selected...</p>
           {isCreator ? (
-            <p className="no-story-hint">👆 Select a story above to start estimation</p>
+            <p className="no-story-hint"><Icon name={ICONS.caretRight} size={14} /> Select a story above to start estimation</p>
           ) : (
             <p className="no-story-hint">The admin will select a story to estimate soon</p>
           )}
@@ -487,7 +488,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
               <h4>React to the session:</h4>
               {reactionCount > 0 && (
                 <div className="reaction-counter">
-                  +{reactionCount} 🎉
+                  +{reactionCount} <Icon name={ICONS.confetti} size={14} />
                 </div>
               )}
             </div>
@@ -523,7 +524,8 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
               onClick={toggleReactions}
               title={reactionsEnabled ? 'Disable reactions' : 'Enable reactions'}
             >
-              {reactionsEnabled ? '🙊 Disable Reactions' : '😍 Enable Reactions'}
+              <Icon name={reactionsEnabled ? ICONS.eyeSlash : ICONS.smiley} size={14} />
+              {reactionsEnabled ? ' Disable Reactions' : ' Enable Reactions'}
             </button>
           </div>
         )}
@@ -534,7 +536,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   return (
     <div className="voting-panel">
       <div className="voting-header">
-        <h3>🗳️ Estimating Story</h3>
+        <h3><Icon name={ICONS.ballot} size={20} /> Estimating Story</h3>
         <div className="current-story">
           <h4>{currentStory.title}</h4>
           {currentStory.description && (
@@ -567,7 +569,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
           
           {myVote && (
             <div className="my-vote">
-              ✅ Your vote: <span className="vote-value">{myVote}</span>
+              <Icon name={ICONS.checkCircle} size={16} /> Your vote: <span className="vote-value">{myVote}</span>
             </div>
           )}
         </div>
@@ -624,13 +626,13 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       {/* Information messages for non-voters */}
       {currentUser?.isSpectator && !votesRevealed && (
         <div className="voting-info">
-          <p>👁️ You are observing as a <strong>Viewer</strong> - you cannot vote</p>
+          <p><Icon name={ICONS.eye} size={16} /> You are observing as a <strong>Viewer</strong> - you cannot vote</p>
         </div>
       )}
 
       {isCreator && !votesRevealed && (
         <div className="voting-info">
-          <p>👑 You are the <strong>Admin</strong> - you manage voting but cannot vote yourself</p>
+          <p><Icon name={ICONS.crown} size={16} /> You are the <strong>Admin</strong> - you manage voting but cannot vote yourself</p>
         </div>
       )}
 
@@ -658,7 +660,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
                     className={`vote-card ${isRevealed ? 'revealed' : 'hidden'} ${valueClass}`}
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    {isRevealed ? vote.points : '🃏'}
+                    {isRevealed ? vote.points : <Icon name={ICONS.cards} size={24} />}
                     <div className="vote-user">{vote.userName?.trim() || 'User'}</div>
                   </div>
                 );
@@ -673,7 +675,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
           </>
         ) : (
           <div className="no-votes-yet">
-            <p>🎴 No votes yet — waiting for players...</p>
+            <p><Icon name={ICONS.cardDeck} size={16} /> No votes yet — waiting for players...</p>
           </div>
         )}
       </div>
@@ -682,10 +684,10 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       {votesRevealed && votes.length > 0 && (
         <div className="vote-results">
           <h4>
-            📊 Results:
+            <Icon name={ICONS.chart} size={18} /> Results:
             {autoRevealed && (
               <span className="auto-reveal-indicator" title="Votes revealed automatically when all players voted">
-                {" "}⚡ Auto-revealed
+                {" "}<Icon name={ICONS.lightning} size={14} /> Auto-revealed
               </span>
             )}
           </h4>
@@ -694,7 +696,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
           <div className="voting-metrics">
             <div className="metrics-summary">
               <span className="metric-item">
-                📈 Total Votes: <strong>{votes.length}</strong>
+                <Icon name={ICONS.chartLine} size={14} /> Total Votes: <strong>{votes.length}</strong>
               </span>
               {(() => {
                 const numericVotes = votes
@@ -705,7 +707,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
                   const average = (numericVotes.reduce((sum, val) => sum + val, 0) / numericVotes.length).toFixed(1);
                   return (
                     <span className="metric-item">
-                      🎯 Average: <strong>{average} points</strong>
+                      <Icon name={ICONS.target} size={14} /> Average: <strong>{average} points</strong>
                     </span>
                   );
                 }
@@ -716,7 +718,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
           
           {/* Detailed Vote Breakdown */}
           <div className="results-breakdown">
-            <h5>📋 Vote Distribution:</h5>
+            <h5><Icon name={ICONS.clipboard} size={14} /> Vote Distribution:</h5>
             <div className="results-summary">
               {(() => {
                 const pointCounts = votes.reduce((acc: { [key: string]: number }, vote) => {
@@ -754,11 +756,11 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
                 className="btn btn-primary reveal-btn"
                 onClick={revealVotes}
               >
-                🔍 Reveal Votes
+                <Icon name={ICONS.search} size={16} /> Reveal Votes
               </button>
             ) : (
               <div className="voting-message">
-                <p>⏳ Waiting for admin to reveal votes...</p>
+                <p><Icon name={ICONS.hourglass} size={14} /> Waiting for admin to reveal votes...</p>
               </div>
             )
           ) : (
@@ -768,11 +770,11 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
                   className="btn btn-secondary clear-btn"
                   onClick={clearVotes}
                 >
-                  🗑️ New Vote
+                  <Icon name={ICONS.refresh} size={16} /> New Vote
                 </button>
               ) : (
                 <div className="voting-message">
-                  <p>👑 Only the admin can start a new voting round</p>
+                  <p><Icon name={ICONS.crown} size={14} /> Only the admin can start a new voting round</p>
                 </div>
               )}
             </div>

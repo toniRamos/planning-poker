@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon, ICONS } from './Icons';
 import './ParticipationSummary.css';
 
 interface User {
@@ -55,13 +56,13 @@ export const ParticipationSummary: React.FC<ParticipationSummaryProps> = ({
   return (
     <div className="participation-summary">
       <div className="summary-header">
-        <h3>📊 Session Summary</h3>
+        <h3><Icon name={ICONS.chart} size={20} /> Session Summary</h3>
         <div className="summary-stats">
           <span className="stat-item">
-            👥 {users.length} {users.length === 1 ? 'Participant' : 'Participants'}
+            <Icon name={ICONS.users} size={14} /> {users.length} {users.length === 1 ? 'Participant' : 'Participants'}
           </span>
           <span className="stat-item">
-            🎉 {totalReactions} {totalReactions === 1 ? 'Reaction' : 'Reactions'}
+            <Icon name={ICONS.confetti} size={14} /> {totalReactions} {totalReactions === 1 ? 'Reaction' : 'Reactions'}
           </span>
         </div>
       </div>
@@ -84,7 +85,7 @@ export const ParticipationSummary: React.FC<ParticipationSummaryProps> = ({
                 {/* Show average if available */}
                 {userAverage !== undefined && (
                   <div className="participant-average">
-                    📊 Average Vote: <strong>{userAverage}</strong>
+                    <Icon name={ICONS.chart} size={14} /> Average Vote: <strong>{userAverage}</strong>
                   </div>
                 )}
                 

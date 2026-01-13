@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Icon, ICONS } from '../../../components/Icons';
 import './UserStoryManager.css';
 
 interface UserStory {
@@ -421,13 +422,13 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
               className="btn btn-danger"
               onClick={closeSession}
             >
-              🔒 Close Session
+              <Icon name={ICONS.lock} size={14} /> Close Session
             </button>
           </div>
         )}
         {sessionClosed && (
           <div className="session-closed-badge">
-            <span>🔒 Session Closed</span>
+            <Icon name={ICONS.lock} size={14} /> Session Closed
           </div>
         )}
       </div>
@@ -527,7 +528,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
       <div className="stories-list">
         {userStories.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📋</div>
+            <div className="empty-state-icon"><Icon name={ICONS.clipboard} size={48} /></div>
             <h4>No stories yet</h4>
             {isCreator ? (
               <>
@@ -565,13 +566,13 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     {story.title}
                   </a>
                   {story.estimatedPoints && (
-                    <span className="estimate-inline">📊 {story.estimatedPoints} pts</span>
+                    <span className="estimate-inline"><Icon name={ICONS.chart} size={12} /> {story.estimatedPoints} pts</span>
                   )}
                   {currentStoryId === story.id && (
                     <span className="current-badge">Current</span>
                   )}
                   {story.isScored && (
-                    <span className="scored-badge">✅ Scored</span>
+                    <span className="scored-badge"><Icon name={ICONS.checkCircle} size={12} /> Scored</span>
                   )}
                 </div>
                 
@@ -602,7 +603,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                       onClick={() => resetUserStoryVoting(story.id)}
                       title="Reset votes and re-estimate this story"
                     >
-                      🔄 Re-estimate
+                      <Icon name={ICONS.refresh} size={12} /> Re-estimate
                     </button>
                   )}
                   <button
@@ -610,7 +611,7 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
                     onClick={() => toggleUserStoryScore(story.id)}
                     title={story.isScored ? 'Mark as not scored' : 'Mark as scored'}
                   >
-                    {story.isScored ? '✅ Scored' : '⚪ Mark'}
+                    <Icon name={story.isScored ? ICONS.checkCircle : ICONS.check} size={12} /> {story.isScored ? 'Scored' : 'Mark'}
                   </button>
                   <button
                     className="btn btn-sm btn-danger"

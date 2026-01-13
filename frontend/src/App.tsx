@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import CreateSession from './components/CreateSession';
 import SessionView from './components/SessionView';
+import { Icon, ICONS } from './components/Icons';
 import './App.css';
 
 const HomePage: React.FC = () => {
@@ -34,7 +35,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="app">
       <header className="app-header home-header">
-        <h1>🃏 Planning Poker</h1>
+        <h1><Icon name={ICONS.cards} size={32} className="brand-icon" /> Planning Poker</h1>
       </header>
       
       <main className="app-main">
@@ -45,7 +46,7 @@ const HomePage: React.FC = () => {
             
             <div className="home-actions">
               <a href="/create-session" className="create-session-btn">
-                <span className="btn-icon">✨</span>
+                <Icon name={ICONS.sparkle} size={18} className="btn-icon" />
                 <span>Create New Session</span>
               </a>
               
@@ -80,17 +81,17 @@ const HomePage: React.FC = () => {
           
           <div className="features-section">
             <div className="feature">
-              <div className="feature-icon">🃏</div>
+              <div className="feature-icon"><Icon name={ICONS.cards} size={32} /></div>
               <h3>Interactive Cards</h3>
               <p>Fibonacci sequence cards with smooth animations for accurate estimations</p>
             </div>
             <div className="feature">
-              <div className="feature-icon">⚡</div>
+              <div className="feature-icon"><Icon name={ICONS.lightning} size={32} /></div>
               <h3>Real-time Sync</h3>
               <p>See votes appear instantly as your team makes their estimates</p>
             </div>
             <div className="feature">
-              <div className="feature-icon">🎭</div>
+              <div className="feature-icon"><Icon name={ICONS.mask} size={32} /></div>
               <h3>Fun Reactions</h3>
               <p>React with emojis that rain down the screen for everyone to see</p>
             </div>

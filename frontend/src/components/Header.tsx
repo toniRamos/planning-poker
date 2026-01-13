@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Icon, ICONS } from './Icons';
 import './Header.css';
 
 interface HeaderProps {
@@ -51,11 +52,11 @@ const Header: React.FC<HeaderProps> = ({
             onClick={onToggleUsersPanel}
             title="Toggle users panel"
           >
-            👥
+            <Icon name={ICONS.users} size={18} />
           </button>
         )}
         <div className="header-title">
-          <h1>🃏 Planning Poker</h1>
+          <h1><Icon name={ICONS.cards} size={28} className="brand-icon" /> Planning Poker</h1>
           {sessionName && <span className="session-name">{sessionName}</span>}
         </div>
         {onShareSession && sessionName && (
@@ -64,7 +65,7 @@ const Header: React.FC<HeaderProps> = ({
             onClick={onShareSession}
             title="Copy session URL to clipboard"
           >
-            <span>🔗</span>
+            <Icon name={ICONS.share} size={16} />
             <span>Share</span>
           </button>
         )}
@@ -78,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={onChangeName}
               title="Change name"
             >
-              ⚙️
+              <Icon name={ICONS.gear} size={16} />
             </button>
           </div>
         )}
@@ -89,15 +90,16 @@ const Header: React.FC<HeaderProps> = ({
           onClick={toggleTheme}
           title={lightMode ? 'Switch to dark mode' : 'Switch to light mode'}
         >
-          <span className="toggle-icon sun-icon">☀️</span>
-          <span className="toggle-icon moon-icon">🌙</span>
+          <span className="toggle-icon sun-icon"><Icon name={ICONS.sun} size={14} /></span>
+          <span className="toggle-icon moon-icon"><Icon name={ICONS.moon} size={14} /></span>
           <div className="toggle-slider"></div>
         </div>
 
         <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+          <Icon name={isConnected ? ICONS.connected : ICONS.disconnected} size={14} />
+          {isConnected ? 'Connected' : 'Disconnected'}
         </span>
-        <span className="user-count">👥 {totalUsers} users online</span>
+        <span className="user-count"><Icon name={ICONS.users} size={14} /> {totalUsers} online</span>
       </div>
     </header>
   );

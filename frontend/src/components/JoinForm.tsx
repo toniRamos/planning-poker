@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserRole } from '../types/User';
+import { Icon, ICONS } from './Icons';
 import './JoinForm.css';
 
 interface JoinFormProps {
@@ -37,7 +38,8 @@ const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectator
       
       {/* Connection status indicator */}
       <div className={`connection-badge ${isConnected ? 'connected' : 'connecting'}`}>
-        {isConnected ? '🟢 Connected' : '🔄 Connecting...'}
+        <Icon name={isConnected ? ICONS.connected : ICONS.loading} size={14} className={isConnected ? '' : 'spin'} />
+        {isConnected ? ' Connected' : ' Connecting...'}
       </div>
       
       <form onSubmit={handleSubmit} className="join-form">
@@ -69,7 +71,7 @@ const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectator
                   onChange={(e) => setSelectedRole(e.target.value as UserRole)}
                 />
                 <span className="role-label">
-                  🎯 <strong>Player</strong> - Can participate in voting
+                  <Icon name={ICONS.target} size={16} /> <strong>Player</strong> - Can participate in voting
                 </span>
               </label>
               <label className="role-option">
@@ -81,7 +83,7 @@ const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectator
                   onChange={(e) => setSelectedRole(e.target.value as UserRole)}
                 />
                 <span className="role-label">
-                  👁️ <strong>Viewer</strong> - Can observe without voting
+                  <Icon name={ICONS.eye} size={16} /> <strong>Viewer</strong> - Can observe without voting
                 </span>
               </label>
             </div>
@@ -100,7 +102,10 @@ const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectator
                 Joining...
               </>
             ) : (
-              selectedRole === UserRole.PLAYER ? '🎯 Join as Player' : '👁️ Join as Viewer'
+              <>
+                <Icon name={selectedRole === UserRole.PLAYER ? ICONS.target : ICONS.eye} size={16} />
+                {selectedRole === UserRole.PLAYER ? ' Join as Player' : ' Join as Viewer'}
+              </>
             )}
           </button>
         </div>

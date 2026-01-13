@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ConnectedUser } from '../modules/shared/hooks/useSocket';
 import { UserRole } from '../types/User';
 import { Socket } from 'socket.io-client';
+import { Icon, ICONS } from './Icons';
 
 interface UsersListProps {
   users: ConnectedUser[];
@@ -72,10 +73,10 @@ const UsersList: React.FC<UsersListProps> = ({
 
   const getRoleIcon = (role?: UserRole) => {
     switch (role) {
-      case UserRole.ADMIN: return '👑';
-      case UserRole.PLAYER: return '🎯';
-      case UserRole.VIEWER: return '👁️';
-      default: return '👤';
+      case UserRole.ADMIN: return <Icon name={ICONS.crown} size={18} />;
+      case UserRole.PLAYER: return <Icon name={ICONS.target} size={18} />;
+      case UserRole.VIEWER: return <Icon name={ICONS.eye} size={18} />;
+      default: return <Icon name={ICONS.user} size={18} />;
     }
   };
 
@@ -161,9 +162,9 @@ const UsersList: React.FC<UsersListProps> = ({
           disabled={changingRole === user.id}
           className="role-selector-mini"
         >
-          <option value={UserRole.ADMIN}>👑</option>
-          <option value={UserRole.PLAYER}>🎯</option>
-          <option value={UserRole.VIEWER}>👁️</option>
+          <option value={UserRole.ADMIN}>Admin</option>
+          <option value={UserRole.PLAYER}>Player</option>
+          <option value={UserRole.VIEWER}>Viewer</option>
         </select>
       )}
     </div>
@@ -183,7 +184,7 @@ const UsersList: React.FC<UsersListProps> = ({
       {admins.length > 0 && (
         <div className="role-section">
           <h4 className="role-header admin-header">
-            � Admins ({admins.length})
+            <Icon name={ICONS.crown} size={16} /> Admins ({admins.length})
           </h4>
           <div className="users-list">
             {admins.map(renderUserItem)}
@@ -194,7 +195,7 @@ const UsersList: React.FC<UsersListProps> = ({
       {players.length > 0 && (
         <div className="role-section">
           <h4 className="role-header player-header">
-            🎯 Players ({players.length})
+            <Icon name={ICONS.target} size={16} /> Players ({players.length})
             {isEstimationActive && currentStoryId && (
               <span className="voting-summary">
                 {votedUsers.size}/{players.length} voted
@@ -210,7 +211,7 @@ const UsersList: React.FC<UsersListProps> = ({
       {viewers.length > 0 && (
         <div className="role-section">
           <h4 className="role-header viewer-header">
-            👁️ Viewers ({viewers.length})
+            <Icon name={ICONS.eye} size={16} /> Viewers ({viewers.length})
           </h4>
           <div className="users-list">
             {viewers.map(renderUserItem)}
