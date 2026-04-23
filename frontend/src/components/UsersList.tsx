@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ConnectedUser } from '../modules/shared/hooks/useSocket';
 import { UserRole } from '../types/User';
 import { Socket } from 'socket.io-client';
 import { Icon, ICONS } from './Icons';
+import Avatar from './Avatar';
 
 interface UsersListProps {
   users: ConnectedUser[];
@@ -15,10 +16,28 @@ interface UsersListProps {
   isEstimationActive?: boolean;
 }
 
-const UsersList: React.FC<UsersListProps> = ({ 
-  users, 
-  totalUsers, 
-  currentUserId, 
+const roleLabel = (role?: UserRole) => {
+  switch (role) {
+    case UserRole.ADMIN: return 'Admin';
+    case UserRole.PLAYER: return 'Player';
+    case UserRole.VIEWER: return 'Viewer';
+    default: return '';
+  }
+};
+
+const roleIcon = (role?: UserRole) => {
+  switch (role) {
+    case UserRole.ADMIN: return ICONS.crown;
+    case UserRole.PLAYER: return ICONS.target;
+    case UserRole.VIEWER: return ICONS.eye;
+    default: return ICONS.user;
+  }
+};
+
+const UsersList: React.FC<UsersListProps> = ({
+  users,
+  totalUsers,
+  currentUserId,
   currentUserRole,
   sessionId,
   socket,
@@ -28,12 +47,10 @@ const UsersList: React.FC<UsersListProps> = ({
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [votedUsers, setVotedUsers] = useState<Set<string>>(new Set());
 
-  // Reset voted users when story changes or estimation starts/stops
   useEffect(() => {
     setVotedUsers(new Set());
   }, [currentStoryId, isEstimationActive]);
 
-  // Listen for vote events
   useEffect(() => {
     if (!socket) return;
 
@@ -46,19 +63,8 @@ const UsersList: React.FC<UsersListProps> = ({
         });
       }
     };
-
-    const handleVotesRevealed = () => {
-      // Reset voting status when votes are revealed
-      setVotedUsers(new Set());
-    };
-
-    const handleVotingReset = (data?: any) => {
-      // Reset voting status when voting is reset (re-estimate)
-      console.log('UsersList: Received voting-reset event', data);
-      console.log('UsersList: Current voted users before reset:', votedUsers);
-      setVotedUsers(new Set());
-      console.log('UsersList: Voted users reset');
-    };
+    const handleVotesRevealed = () => setVotedUsers(new Set());
+    const handleVotingReset = () => setVotedUsers(new Set());
 
     socket.on('vote-submitted', handleVoteSubmitted);
     socket.on('votes-revealed', handleVotesRevealed);
@@ -71,154 +77,121 @@ const UsersList: React.FC<UsersListProps> = ({
     };
   }, [socket, currentStoryId]);
 
-  const getRoleIcon = (role?: UserRole) => {
-    switch (role) {
-      case UserRole.ADMIN: return <Icon name={ICONS.crown} size={18} />;
-      case UserRole.PLAYER: return <Icon name={ICONS.target} size={18} />;
-      case UserRole.VIEWER: return <Icon name={ICONS.eye} size={18} />;
-      default: return <Icon name={ICONS.user} size={18} />;
-    }
-  };
-
-  const getRoleColor = (role?: UserRole) => {
-    switch (role) {
-      case UserRole.ADMIN: return '#dc3545';
-      case UserRole.PLAYER: return '#28a745';
-      case UserRole.VIEWER: return '#6c757d';
-      default: return '#007bff';
-    }
-  };
+  const isAdmin = currentUserRole === UserRole.ADMIN;
 
   const handleRoleChange = async (targetUserId: string, newRole: UserRole) => {
-    console.log('🔄 Role change requested:', { targetUserId, newRole, sessionId, currentUserRole, isAdmin, socket: !!socket });
-    
-    if (!socket || !sessionId || currentUserRole !== UserRole.ADMIN) {
-      console.log('❌ Role change blocked:', {
-        noSocket: !socket,
-        noSessionId: !sessionId,
-        notAdmin: currentUserRole !== UserRole.ADMIN,
-        currentRole: currentUserRole
-      });
-      return;
-    }
-    
+    if (!socket || !sessionId || currentUserRole !== UserRole.ADMIN) return;
     setChangingRole(targetUserId);
-    
-    const requestData = {
-      userId: targetUserId,
-      newRole,
-      sessionId
-    };
-    
-    console.log('📡 Emitting request-role-change:', requestData);
-    socket.emit('request-role-change', requestData);
-
-    // Reset changing state after a delay
+    socket.emit('request-role-change', { userId: targetUserId, newRole, sessionId });
     setTimeout(() => setChangingRole(null), 1000);
   };
 
-  const renderVotingStatus = (user: ConnectedUser) => {
-    // Show voting status for players during active estimation (visible to everyone)
-    if (!isEstimationActive || user.role !== UserRole.PLAYER || !currentStoryId) {
-      return null;
-    }
+  const admins = users.filter(u => u.role === UserRole.ADMIN);
+  const players = users.filter(u => u.role === UserRole.PLAYER);
+  const viewers = users.filter(u => u.role === UserRole.VIEWER);
+  const playersVoted = players.filter(p => votedUsers.has(p.id)).length;
 
+  const renderRow = (user: ConnectedUser) => {
+    const isMe = user.id === currentUserId;
+    const showVote =
+      isEstimationActive &&
+      user.role === UserRole.PLAYER &&
+      !!currentStoryId;
     const hasVoted = votedUsers.has(user.id);
-    
+
     return (
-      <div 
-        className={`user-voting-status ${hasVoted ? 'voted' : 'not-voted'}`} 
-        title={hasVoted ? 'Vote submitted' : 'Waiting for vote'}
-      >
-        <div className="voting-card-visual">
-          <div className="card-inner">
-            {hasVoted ? '✓' : '?'}
+      <div key={user.id} className={`participant-row${isMe ? ' current' : ''}`}>
+        <Avatar name={user.name} online />
+        <div className="name-col">
+          <div className="name">
+            {user.name}
+            {isMe && (
+              <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 400 }}>· you</span>
+            )}
+          </div>
+          <div className="role">
+            <Icon name={roleIcon(user.role)} size={11} />
+            {roleLabel(user.role)}
           </div>
         </div>
+
+        {showVote && (
+          <div
+            className={`vote-pill ${hasVoted ? 'voted' : 'waiting'}`}
+            title={hasVoted ? 'Vote submitted' : 'Waiting for vote'}
+          >
+            {hasVoted ? '·' : '—'}
+          </div>
+        )}
+
+        {isAdmin && !isMe && (
+          <select
+            className="role-select"
+            value={user.role || UserRole.PLAYER}
+            onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
+            disabled={changingRole === user.id}
+            aria-label={`Change role for ${user.name}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <option value={UserRole.ADMIN}>Admin</option>
+            <option value={UserRole.PLAYER}>Player</option>
+            <option value={UserRole.VIEWER}>Viewer</option>
+          </select>
+        )}
       </div>
     );
   };
 
-  const renderUserItem = (user: ConnectedUser) => (
-    <div key={user.id} className={`user-item ${user.id === currentUserId ? 'current-user' : ''}`}>
-      <span className="user-name">
-        {user.name}
-        {user.id === currentUserId && <span className="you-indicator"> (You)</span>}
-      </span>
-      
-      {renderVotingStatus(user)}
-      
-      <span 
-        className="user-role-simple" 
-        style={{ color: getRoleColor(user.role) }}
-      >
-        {getRoleIcon(user.role)}
-      </span>
-      
-      {isAdmin && user.id !== currentUserId && (
-        <select 
-          value={user.role || UserRole.PLAYER}
-          onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
-          disabled={changingRole === user.id}
-          className="role-selector-mini"
-        >
-          <option value={UserRole.ADMIN}>Admin</option>
-          <option value={UserRole.PLAYER}>Player</option>
-          <option value={UserRole.VIEWER}>Viewer</option>
-        </select>
-      )}
-    </div>
-  );
-
-  const isAdmin = currentUserRole === UserRole.ADMIN;
-  
-  // Separate users by role
-  const admins = users.filter(user => user.role === UserRole.ADMIN);
-  const players = users.filter(user => user.role === UserRole.PLAYER);
-  const viewers = users.filter(user => user.role === UserRole.VIEWER);
-
   return (
-    <div className="users-section">
-      <h3>Users ({totalUsers})</h3>
-      
+    <>
       {admins.length > 0 && (
-        <div className="role-section">
-          <h4 className="role-header admin-header">
-            <Icon name={ICONS.crown} size={16} /> Admins ({admins.length})
-          </h4>
-          <div className="users-list">
-            {admins.map(renderUserItem)}
+        <>
+          <div className="role-group-header">
+            <span>
+              <Icon name={ICONS.crown} size={11} /> Admins
+            </span>
+            <span className="count">{admins.length}</span>
           </div>
-        </div>
+          {admins.map(renderRow)}
+        </>
       )}
-      
+
       {players.length > 0 && (
-        <div className="role-section">
-          <h4 className="role-header player-header">
-            <Icon name={ICONS.target} size={16} /> Players ({players.length})
-            {isEstimationActive && currentStoryId && (
-              <span className="voting-summary">
-                {votedUsers.size}/{players.length} voted
-              </span>
+        <>
+          <div className="role-group-header">
+            <span>
+              <Icon name={ICONS.target} size={11} /> Players
+            </span>
+            {isEstimationActive && currentStoryId ? (
+              <span className="muted-count">{playersVoted}/{players.length} voted</span>
+            ) : (
+              <span className="count">{players.length}</span>
             )}
-          </h4>
-          <div className="users-list">
-            {players.map(renderUserItem)}
           </div>
-        </div>
+          {players.map(renderRow)}
+        </>
       )}
-      
+
       {viewers.length > 0 && (
-        <div className="role-section">
-          <h4 className="role-header viewer-header">
-            <Icon name={ICONS.eye} size={16} /> Viewers ({viewers.length})
-          </h4>
-          <div className="users-list">
-            {viewers.map(renderUserItem)}
+        <>
+          <div className="role-group-header">
+            <span>
+              <Icon name={ICONS.eye} size={11} /> Viewers
+            </span>
+            <span className="count">{viewers.length}</span>
           </div>
+          {viewers.map(renderRow)}
+        </>
+      )}
+
+      {users.length === 0 && (
+        <div className="story-empty">
+          <div className="glyph"><Icon name={ICONS.users} size={18} /></div>
+          <h4>No one here yet</h4>
+          <p>Waiting for participants ({totalUsers})</p>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

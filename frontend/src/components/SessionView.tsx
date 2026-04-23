@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Header, JoinForm } from './';
+import Header from './Header';
+import JoinForm from './JoinForm';
 import UsersList from './UsersList';
 import { ParticipationSummary } from './ParticipationSummary';
+import { Icon, ICONS } from './Icons';
 
 import { UserStoryManager } from '../modules/shared/components/UserStoryManager';
 import { VotingPanel } from '../modules/shared/components/VotingPanel';
@@ -41,7 +43,11 @@ interface Session {
   };
 }
 
-const SessionView: React.FC = () => {
+interface SessionViewProps {
+  onOpenTweaks?: () => void;
+}
+
+const SessionView: React.FC<SessionViewProps> = ({ onOpenTweaks }) => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,12 +57,10 @@ const SessionView: React.FC = () => {
   const [showUsersPanel, setShowUsersPanel] = useState(false);
   const [showChangeNameModal, setShowChangeNameModal] = useState(false);
   const [newName, setNewName] = useState('');
-  
-  // Konami Code state for admin override
+
   const [konamiSequence, setKonamiSequence] = useState<string[]>([]);
   const konamiCode = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-  
-  // Check if user is creator (from URL params)
+
   const urlParams = new URLSearchParams(window.location.search);
   const creatorName = urlParams.get('creator');
 
@@ -68,7 +72,6 @@ const SessionView: React.FC = () => {
     currentUser,
     joinWithName,
     updateName,
-    messages
   } = useSocket(sessionId);
 
   useEffect(() => {
@@ -81,14 +84,10 @@ const SessionView: React.FC = () => {
     const fetchSession = async () => {
       try {
         const response = await fetch(`/api/sessions/${sessionId}`);
-
         if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error('Session not found');
-          }
+          if (response.status === 404) throw new Error('Session not found');
           throw new Error('Failed to fetch session');
         }
-
         const result = await response.json();
         setSession(result.data);
       } catch (err) {
@@ -101,7 +100,6 @@ const SessionView: React.FC = () => {
     fetchSession();
   }, [sessionId]);
 
-  // Function to refresh session data (for when stories are updated)
   const refreshSession = () => {
     if (sessionId) {
       fetch(`/api/sessions/${sessionId}`)
@@ -115,55 +113,26 @@ const SessionView: React.FC = () => {
     joinWithName(userName, role);
   };
 
-  // Auto-join creator when they access session directly
   useEffect(() => {
-    console.log('Auto-join useEffect triggered with:', {
-      creatorName,
-      sessionExists: !!session,
-      currentUser: currentUser?.name || 'none',
-      socketConnected: !!socket?.connected
-    });
-    
     if (creatorName && session && !currentUser && socket) {
-      console.log(`🚀 Auto-joining creator ${creatorName} with ADMIN role`);
       handleJoinSession(creatorName, UserRole.ADMIN);
-    } else {
-      console.log('Auto-join conditions not met:', {
-        hasCreatorName: !!creatorName,
-        hasSession: !!session,
-        hasCurrentUser: !!currentUser,
-        hasSocket: !!socket
-      });
     }
-  }, [creatorName, session, currentUser, socket]);
+  }, [creatorName, session, currentUser, socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Listen for role changes
   useEffect(() => {
     if (!socket) return;
 
     const handleRoleChanged = (data: { users: any[]; changedUser: { userId: string; newRole: string } }) => {
-      console.log('Role changed:', data);
-      // Force refresh of session data to update permissions
       refreshSession();
-      // Show notification about role change
       setRoleChangeNotification(`User role changed to ${data.changedUser.newRole}`);
       setTimeout(() => setRoleChangeNotification(null), 4000);
     };
 
-    const handleRoleChangeSuccess = (data: { targetUser: any; message: string }) => {
-      console.log('Role change success:', data);
-      // Refresh session when admin changes someone's role
-      refreshSession();
-    };
+    const handleRoleChangeSuccess = () => refreshSession();
+    const handleSessionClosed = () => refreshSession();
 
     socket.on('role-changed', handleRoleChanged);
     socket.on('role-change-success', handleRoleChangeSuccess);
-    
-    // Listen for session-closed event
-    const handleSessionClosed = () => {
-      console.log('Session closed event received');
-      refreshSession();
-    };
     socket.on('session-closed', handleSessionClosed);
 
     return () => {
@@ -171,99 +140,55 @@ const SessionView: React.FC = () => {
       socket.off('role-change-success', handleRoleChangeSuccess);
       socket.off('session-closed', handleSessionClosed);
     };
-  }, [socket, refreshSession]);
+  }, [socket, refreshSession]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Konami Code listener for admin override
+  // Konami Code admin override
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       try {
-        // Validate event and key property
-        if (!event || !event.key || typeof event.key !== 'string') {
-          console.warn('Invalid key event:', event);
-          return;
-        }
-
-        // Only listen for arrow keys
-        if (!event.key.startsWith('Arrow')) {
-          setKonamiSequence([]); // Reset sequence on non-arrow key
-          return;
-        }
-
-        console.log('Arrow key pressed:', event.key); // Debug log
+        if (!event || !event.key || typeof event.key !== 'string') return;
+        if (!event.key.startsWith('Arrow')) { setKonamiSequence([]); return; }
 
         setKonamiSequence(prev => {
           const newSequence = [...prev, event.key];
-          
-          // Keep only the last 8 keys (length of konami code)
-          if (newSequence.length > konamiCode.length) {
-            newSequence.shift();
-          }
-          
-          // Check if sequence matches konami code
+          if (newSequence.length > konamiCode.length) newSequence.shift();
           if (newSequence.length === konamiCode.length) {
             const matches = newSequence.every((key, index) => key === konamiCode[index]);
-            
-            console.log('Checking sequence:', newSequence, 'vs', konamiCode);
-            
             if (matches) {
-              console.log('🎮 Konami Code activated! Promoting to admin...');
               promoteToAdmin();
-              return []; // Reset sequence after activation
+              return [];
             }
           }
-          
           return newSequence;
         });
       } catch (error) {
         console.error('Error in Konami Code handler:', error);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [currentUser, socket, sessionId]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentUser, socket, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Function to promote current user to admin
   const promoteToAdmin = () => {
-    if (!currentUser || !socket || !sessionId) {
-      console.warn('Cannot promote to admin: missing requirements');
-      return;
-    }
-
+    if (!currentUser || !socket || !sessionId) return;
     if (currentUser.role === UserRole.ADMIN) {
-      console.log('User is already admin');
       setRoleChangeNotification('🎮 You are already an admin!');
       setTimeout(() => setRoleChangeNotification(null), 3000);
       return;
     }
-
-    console.log('🎮 Promoting user to admin via Konami Code');
-    
-    // Emit admin promotion request
     socket.emit('konami-admin-promotion', {
-      sessionId,
-      userId: currentUser.id,
-      userName: currentUser.name
+      sessionId, userId: currentUser.id, userName: currentUser.name
     });
-
-    setRoleChangeNotification('🎮 Konami Code activated! You are now admin! 👑');
+    setRoleChangeNotification('🎮 Konami Code activated! You are now admin 👑');
     setTimeout(() => setRoleChangeNotification(null), 5000);
   };
 
-  // Function to handle sharing session URL
   const handleShareSession = async () => {
     try {
-      // Get the current URL without query parameters for a clean share link
       const sessionUrl = `${window.location.origin}/session/${sessionId}`;
-      
-      // Try to use the modern Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(sessionUrl);
       } else {
-        // Fallback for older browsers or non-HTTPS contexts
         const textArea = document.createElement('textarea');
         textArea.value = sessionUrl;
         textArea.style.position = 'fixed';
@@ -275,32 +200,24 @@ const SessionView: React.FC = () => {
         document.execCommand('copy');
         textArea.remove();
       }
-      
-      // Show notification
       setShowCopyNotification(true);
       setTimeout(() => setShowCopyNotification(false), 3000);
-      
     } catch (err) {
       console.error('Failed to copy session URL:', err);
-      // Fallback: at least show the URL in an alert
       alert(`Session URL: ${window.location.origin}/session/${sessionId}`);
     }
   };
 
-  // Handle name change modal
   const handleOpenChangeNameModal = () => {
     setNewName(currentUser?.name || '');
     setShowChangeNameModal(true);
   };
-
   const handleCloseChangeNameModal = () => {
     setShowChangeNameModal(false);
     setNewName('');
   };
-
   const handleSubmitNameChange = () => {
     if (!newName.trim()) return;
-    
     updateName(newName.trim());
     setShowChangeNameModal(false);
     setNewName('');
@@ -308,202 +225,216 @@ const SessionView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="session-view-loading">
-        <div className="loading-spinner">🔄</div>
-        <h2>Loading Session...</h2>
-        <p>Please wait while we fetch the session details</p>
+      <div className="app-root">
+        <div className="centered-state">
+          <div className="glyph"><Icon name={ICONS.loading} size={22} className="spin" /></div>
+          <h2>Loading session…</h2>
+          <p>Fetching session details</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="session-view-error">
-        <div className="error-icon">❌</div>
-        <h2>Session Not Available</h2>
-        <p>{error}</p>
-        <div className="error-actions">
-          <button onClick={() => window.history.back()} className="back-button">
-            ← Go Back
-          </button>
-          <a href="/" className="home-button">
-            🏠 Create New Session
-          </a>
+      <div className="app-root">
+        <div className="centered-state">
+          <div className="glyph" style={{ background: 'color-mix(in oklch, var(--danger), transparent 88%)', color: 'var(--danger)', boxShadow: '0 0 0 1px color-mix(in oklch, var(--danger), transparent 70%)' }}>
+            <Icon name={ICONS.warning} size={22} />
+          </div>
+          <h2>Session not available</h2>
+          <p>{error}</p>
+          <div className="error-actions">
+            <button onClick={() => window.history.back()} className="btn">
+              <Icon name={ICONS.arrowLeft} size={14} /> Go back
+            </button>
+            <a href="/" className="btn btn-primary">
+              <Icon name={ICONS.plus} size={14} /> Create new
+            </a>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!session) {
-    return null;
+  if (!session) return null;
+
+  // Closed session → full summary screen
+  if (session.isClosed && currentUser) {
+    return (
+      <div className="app-root">
+        <Header
+          isConnected={isConnected}
+          totalUsers={totalUsers}
+          sessionName={session.name}
+          currentUserName={currentUser?.name}
+          onChangeName={handleOpenChangeNameModal}
+          onShareSession={handleShareSession}
+          onOpenTweaks={onOpenTweaks}
+        />
+        <ParticipationSummary
+          session={session}
+          users={users}
+          reactionStats={session.reactionStats || {}}
+          userAverages={session.userAverages || {}}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="session-view">
-      {/* Copy notification */}
+    <div className="app-root">
       {showCopyNotification && (
-        <div className="copy-notification">
-          ✅ Session URL copied to clipboard!
+        <div className="toast">
+          <Icon name={ICONS.check} size={14} /> Session link copied
+        </div>
+      )}
+      {roleChangeNotification && (
+        <div className="toast" style={{ background: 'var(--accent)', color: 'oklch(100% 0 0)' }}>
+          <Icon name={ICONS.crown} size={14} /> {roleChangeNotification}
         </div>
       )}
 
-      {/* Role change notification */}
-      {roleChangeNotification && (
-        <div className="role-change-notification">
-          🎭 {roleChangeNotification}
-        </div>
-      )}
-      
-      <Header 
+      <Header
         isConnected={isConnected}
         totalUsers={totalUsers}
         sessionName={session.name}
         currentUserName={currentUser?.name}
         onToggleUsersPanel={() => setShowUsersPanel(!showUsersPanel)}
         showUsersPanel={showUsersPanel}
-        onChangeName={handleOpenChangeNameModal}
+        onChangeName={currentUser ? handleOpenChangeNameModal : undefined}
         onShareSession={currentUser ? handleShareSession : undefined}
+        onOpenTweaks={onOpenTweaks}
       />
 
-      {/* Change Name Modal */}
       {showChangeNameModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onClick={handleCloseChangeNameModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Change Your Name</h3>
-              <button 
-                className="close-btn"
+              <div>
+                <h3>Change your name</h3>
+                <div className="sub">This will update how others see you in the session.</div>
+              </div>
+              <button
+                className="btn btn-ghost btn-icon"
                 onClick={handleCloseChangeNameModal}
+                aria-label="Close"
               >
-                ×
+                <Icon name={ICONS.x} size={14} />
               </button>
             </div>
             <div className="modal-body">
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Enter your new name"
-                className="name-input"
-                maxLength={50}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSubmitNameChange();
-                  }
-                  if (e.key === 'Escape') {
-                    handleCloseChangeNameModal();
-                  }
-                }}
-                autoFocus
-              />
+              <div className="field">
+                <label>New name</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Your new name"
+                  maxLength={50}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSubmitNameChange();
+                    if (e.key === 'Escape') handleCloseChangeNameModal();
+                  }}
+                />
+              </div>
             </div>
             <div className="modal-footer">
-              <button 
-                className="btn btn-secondary"
-                onClick={handleCloseChangeNameModal}
-              >
-                Cancel
-              </button>
-              <button 
+              <button className="btn btn-ghost" onClick={handleCloseChangeNameModal}>Cancel</button>
+              <button
                 className="btn btn-primary"
                 onClick={handleSubmitNameChange}
                 disabled={!newName.trim()}
               >
-                Change Name
+                Change name
               </button>
             </div>
           </div>
         </div>
       )}
-      
-      <main className="session-main">
-        {!currentUser ? (
-          <div className="join-section">
-            <div className="session-info">
-              <h2>{session.name}</h2>
-              {session.description && (
-                <p className="session-description">{session.description}</p>
-              )}
-              <div className="session-meta">
-                <span className="session-creator">Created by {session.createdBy}</span>
-                <span className="session-date">
-                  {new Date(session.createdAt).toLocaleDateString()}
-                </span>
-                <span className="session-capacity">
-                  {totalUsers}/{session.maxUsers} participants
-                </span>
-              </div>
-            </div>
-            
-            <JoinForm 
-              isConnected={isConnected}
-              onJoin={(name, role) => handleJoinSession(name, role)}
-              allowSpectators={session.settings.allowSpectators}
-            />
-          </div>
-        ) : (
-          <>
-            {currentUser && (
-              <>
-                <UserStoryManager
-                  sessionId={sessionId!}
-                  isCreator={currentUser.role === UserRole.ADMIN}
-                  currentStoryId={session.currentStoryId}
-                  onStoryChange={refreshSession}
-                  socket={socket}
-                  sessionClosed={session.isClosed}
-                  onSessionClose={refreshSession}
-                />
-                
-                {/* Voting Panel */}
-                <VotingPanel
-                  sessionId={sessionId!}
-                  currentUser={{
-                    id: currentUser.socketId,
-                    name: currentUser.name,
-                    isSpectator: currentUser.role === UserRole.VIEWER
-                  }}
-                  currentStory={session.currentStoryId ? 
-                    session.userStories.find(story => story.id === session.currentStoryId) || null : null
-                  }
-                  isCreator={currentUser.role === UserRole.ADMIN}
-                  socket={socket}
-                  onRevealVotes={refreshSession}
-                  sessionClosed={session.isClosed}
-                />
-                
-                {/* Participation Summary (shown when session is closed) */}
-                {session.isClosed && (
-                  <ParticipationSummary 
-                    users={users}
-                    reactionStats={session.reactionStats || {}}
-                    userAverages={session.userAverages || {}}
-                  />
-                )}
-                
-                {/* User Sidebar */}
-                <div className={`user-sidebar ${showUsersPanel ? 'open' : ''}`}>
-                  <div className="sidebar-content">
-                    <UsersList 
-                      users={users} 
-                      totalUsers={totalUsers}
-                      currentUserId={currentUser?.id || ''}
-                      currentUserRole={currentUser?.role}
-                      sessionId={sessionId!}
-                      socket={socket}
-                      currentStoryId={session.currentStoryId}
-                      isEstimationActive={!!session.currentStoryId}
-                    />
-                  </div>
-                </div>
-                
-                {/* Overlay for mobile */}
-                {showUsersPanel && <div className="sidebar-overlay" onClick={() => setShowUsersPanel(false)} />}
-              </>
+
+      {!currentUser ? (
+        <div className="join-section">
+          <div className="session-info">
+            <div className="eyebrow">Joining</div>
+            <h2>{session.name}</h2>
+            {session.description && (
+              <p className="session-description">{session.description}</p>
             )}
-          </>
-        )}
-      </main>
+            <div className="session-meta">
+              <span>Created by {session.createdBy}</span>
+              <span>·</span>
+              <span>{new Date(session.createdAt).toLocaleDateString()}</span>
+              <span>·</span>
+              <span>{totalUsers}/{session.maxUsers} participants</span>
+            </div>
+          </div>
+          <JoinForm
+            isConnected={isConnected}
+            onJoin={(name, role) => handleJoinSession(name, role)}
+            allowSpectators={session.settings.allowSpectators}
+          />
+        </div>
+      ) : (
+        <div className="session-layout">
+          {/* LEFT: Stories */}
+          <aside className={`panel${showUsersPanel ? '' : ''}`}>
+            <UserStoryManager
+              sessionId={sessionId!}
+              isCreator={currentUser.role === UserRole.ADMIN}
+              currentStoryId={session.currentStoryId}
+              onStoryChange={refreshSession}
+              socket={socket}
+              sessionClosed={session.isClosed}
+              onSessionClose={refreshSession}
+            />
+          </aside>
+
+          {/* CENTER: Stage (voting / reveal) */}
+          <main>
+            <VotingPanel
+              sessionId={sessionId!}
+              currentUser={{
+                id: currentUser.socketId,
+                name: currentUser.name,
+                isSpectator: currentUser.role === UserRole.VIEWER
+              }}
+              currentStory={session.currentStoryId
+                ? session.userStories.find(s => s.id === session.currentStoryId) || null
+                : null}
+              isCreator={currentUser.role === UserRole.ADMIN}
+              socket={socket}
+              onRevealVotes={refreshSession}
+              sessionClosed={session.isClosed}
+              onCopyLink={handleShareSession}
+            />
+          </main>
+
+          {/* RIGHT: Participants */}
+          <aside className={`panel right${showUsersPanel ? ' mobile-open' : ''}`}>
+            <div className="panel-header">
+              <h3>Participants <span className="count">{users.length}</span></h3>
+              <span className="badge badge-success badge-dot" style={{ fontSize: 10, padding: '2px 8px' }}>
+                Live
+              </span>
+            </div>
+            <div className="panel-body">
+              <UsersList
+                users={users}
+                totalUsers={totalUsers}
+                currentUserId={currentUser?.id || ''}
+                currentUserRole={currentUser?.role}
+                sessionId={sessionId!}
+                socket={socket}
+                currentStoryId={session.currentStoryId}
+                isEstimationActive={!!session.currentStoryId}
+              />
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icon, ICONS } from './Icons';
 import './CreateSession.css';
 
@@ -25,7 +25,6 @@ const CreateSession: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-focus first input on mount
   useEffect(() => {
     const nameInput = document.getElementById('name');
     if (nameInput) nameInput.focus();
@@ -35,7 +34,7 @@ const CreateSession: React.FC = () => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
               type === 'number' ? parseInt(value) || 0 : value
     }));
   };
@@ -45,13 +44,10 @@ const CreateSession: React.FC = () => {
     setError(null);
     setIsLoading(true);
 
-    console.log('Form data:', formData);
-    console.log('Submitting to:', '/api/sessions');
-
     const requestData = {
       name: formData.name,
       description: formData.description,
-      createdBy: `creator-${Date.now()}`, // Unique ID for creator
+      createdBy: `creator-${Date.now()}`,
       creatorName: formData.creatorName,
       maxUsers: formData.maxUsers,
       settings: {
@@ -61,33 +57,21 @@ const CreateSession: React.FC = () => {
       }
     };
 
-    console.log('Request payload:', requestData);
-
     try {
       const response = await fetch('/api/sessions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData)
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Error response:', errorData);
         throw new Error(errorData.error || 'Failed to create session');
       }
 
       const result = await response.json();
-      console.log('Success response:', result);
-      // Creator goes directly to session with admin role
       navigate(`/session/${result.data.id}?creator=${encodeURIComponent(formData.creatorName)}`);
-      
     } catch (err) {
-      console.error('Request error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -95,114 +79,132 @@ const CreateSession: React.FC = () => {
   };
 
   return (
-    <div className="create-session-container">
+    <div className="create-root">
       <Link to="/" className="back-link">
-        <Icon name={ICONS.arrowLeft} size={16} /> Back to Home
+        <Icon name={ICONS.arrowLeft} size={14} /> Back to home
       </Link>
-      
-      <div className="create-session-card">
-        <h1><Icon name={ICONS.cards} size={32} className="title-icon" /> Create New Session</h1>
-        <p className="subtitle">Set up a planning poker session for your team's estimation meeting</p>
 
-        <form onSubmit={handleSubmit} className="create-session-form">
-          <div className="form-group">
-            <label htmlFor="name">Session Name *</label>
+      <div className="create-card">
+        <div className="eyebrow">New session</div>
+        <h1>Create a planning poker room</h1>
+        <p className="subtitle">
+          Set up a room for your team’s estimation meeting. You’ll enter as the admin and control the flow.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="field">
+            <label htmlFor="name">Session name <span style={{ color: 'var(--danger)' }}>*</span></label>
             <input
               id="name"
               name="name"
+              className="input"
               type="text"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="e.g., Sprint 23 Planning"
+              placeholder="e.g. Sprint 23 refinement"
               required
               maxLength={100}
             />
           </div>
 
-          <div className="form-group">
+          <div className="field">
             <label htmlFor="description">Description</label>
             <textarea
               id="description"
               name="description"
+              className="textarea"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Brief description of what you'll be estimating..."
+              placeholder="Brief description of what you’ll be estimating…"
               rows={3}
               maxLength={500}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="creatorName">Your Name *</label>
+          <div className="field">
+            <label htmlFor="creatorName">Your name <span style={{ color: 'var(--danger)' }}>*</span></label>
             <input
               id="creatorName"
               name="creatorName"
+              className="input"
               type="text"
               value={formData.creatorName}
               onChange={handleInputChange}
-              placeholder="Enter your name as session creator"
+              placeholder="How your team will see you"
               required
               maxLength={50}
             />
+            <div className="hint">You’ll join as <strong style={{ color: 'var(--fg)' }}>admin</strong>.</div>
           </div>
+
+          <label className="checkbox-row" htmlFor="allowSpectators">
+            <input
+              id="allowSpectators"
+              name="allowSpectators"
+              type="checkbox"
+              checked={formData.allowSpectators}
+              onChange={handleInputChange}
+            />
+            <div>
+              <div className="label">Allow spectators</div>
+              <div className="desc">Non-voting observers can watch the session.</div>
+            </div>
+          </label>
 
           {error && (
             <div className="error-message">
-              <Icon name={ICONS.xCircle} size={16} /> {error}
+              <Icon name={ICONS.xCircle} size={14} /> {error}
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className={`create-button ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading || !formData.name.trim() || !formData.creatorName.trim()}
-          >
-            {isLoading ? (
-              <>
-                <span className="spinner"></span>
-                Creating session...
-              </>
-            ) : (
-              <>
-                <Icon name={ICONS.rocket} size={18} className="btn-icon" />
-                Create Session
-              </>
-            )}
-          </button>
+          <div className="actions-row">
+            <Link to="/" className="btn btn-ghost">Cancel</Link>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isLoading || !formData.name.trim() || !formData.creatorName.trim()}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner" />
+                  Creating…
+                </>
+              ) : (
+                <>
+                  <Icon name={ICONS.rocket} size={14} />
+                  Create session
+                </>
+              )}
+            </button>
+          </div>
         </form>
 
         <div className="info-section">
-          <h3><Icon name={ICONS.info} size={18} /> What happens next?</h3>
+          <h3><Icon name={ICONS.info} size={12} /> What happens next?</h3>
           <ul>
-            <li><Icon name={ICONS.target} size={14} /> You'll enter directly as the <strong>Admin</strong> with full control</li>
-            <li><Icon name={ICONS.link} size={14} /> Share the session URL with your team members</li>
-            <li><Icon name={ICONS.users} size={14} /> Team members choose to join as <strong>Players</strong> (can vote) or <strong>Viewers</strong> (observe only)</li>
-            <li><Icon name={ICONS.chart} size={14} /> As Admin, you manage user stories and control when votes are revealed</li>
+            <li><Icon name={ICONS.target} size={14} /> You enter directly as the <strong>Admin</strong> with full control.</li>
+            <li><Icon name={ICONS.link} size={14} /> Share the session URL with your team.</li>
+            <li><Icon name={ICONS.users} size={14} /> Teammates join as <strong>Players</strong> (vote) or <strong>Viewers</strong> (observe only).</li>
+            <li><Icon name={ICONS.chart} size={14} /> As admin, you manage stories and reveal votes when ready.</li>
           </ul>
-          
+
           <div className="role-info">
-            <h4><Icon name={ICONS.mask} size={18} /> Roles Explained:</h4>
+            <h4><Icon name={ICONS.mask} size={12} /> Roles</h4>
             <div className="role-cards">
               <div className="role-card admin">
-                <span className="role-icon"><Icon name={ICONS.crown} size={24} /></span>
-                <div className="role-content">
-                  <h5>Admin</h5>
-                  <p>Full control over session, stories, and voting reveals</p>
-                </div>
+                <div className="role-icon"><Icon name={ICONS.crown} size={18} /></div>
+                <h5>Admin</h5>
+                <p>Full control over the session, stories and reveals.</p>
               </div>
               <div className="role-card player">
-                <span className="role-icon"><Icon name={ICONS.target} size={24} /></span>
-                <div className="role-content">
-                  <h5>Player</h5>
-                  <p>Participates in voting and estimation discussions</p>
-                </div>
+                <div className="role-icon"><Icon name={ICONS.target} size={18} /></div>
+                <h5>Player</h5>
+                <p>Participates in voting and estimation.</p>
               </div>
               <div className="role-card viewer">
-                <span className="role-icon"><Icon name={ICONS.eye} size={24} /></span>
-                <div className="role-content">
-                  <h5>Viewer</h5>
-                  <p>Observes the session without voting privileges</p>
-                </div>
+                <div className="role-icon"><Icon name={ICONS.eye} size={18} /></div>
+                <h5>Viewer</h5>
+                <p>Observes without voting privileges.</p>
               </div>
             </div>
           </div>

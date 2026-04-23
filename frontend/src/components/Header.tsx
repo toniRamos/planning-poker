@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon, ICONS } from './Icons';
+import { applyTheme } from './TweaksPanel';
 import './Header.css';
 
 interface HeaderProps {
@@ -11,95 +13,122 @@ interface HeaderProps {
   showUsersPanel?: boolean;
   onChangeName?: () => void;
   onShareSession?: () => void;
+  onOpenTweaks?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  isConnected, 
-  totalUsers, 
-  sessionName, 
+type Theme = 'light' | 'dark';
+
+const readTheme = (): Theme =>
+  (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+
+const Header: React.FC<HeaderProps> = ({
+  isConnected,
+  totalUsers,
+  sessionName,
   currentUserName,
   onToggleUsersPanel,
   showUsersPanel,
   onChangeName,
-  onShareSession
+  onShareSession,
+  onOpenTweaks,
 }) => {
-  // Dark mode is now default, light mode is the toggle
-  const [lightMode, setLightMode] = useState(() => {
-    const saved = localStorage.getItem('lightMode');
-    return saved === 'true';
-  });
+  const [theme, setTheme] = useState<Theme>(readTheme);
 
+  // Keep icon in sync with external theme changes (TweaksPanel, Topbar, etc.)
   useEffect(() => {
-    // Apply light mode class to body (dark is default)
-    if (lightMode) {
-      document.body.classList.add('light-mode');
-    } else {
-      document.body.classList.remove('light-mode');
-    }
-    localStorage.setItem('lightMode', String(lightMode));
-  }, [lightMode]);
+    const html = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setTheme(prev => {
+        const next = readTheme();
+        return prev === next ? prev : next;
+      });
+    });
+    observer.observe(html, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
 
   const toggleTheme = () => {
-    setLightMode(!lightMode);
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    setTheme(next);
   };
 
   return (
-    <header className="app-header">
-      <div className="header-left">
-        {onToggleUsersPanel && (
-          <button 
-            className={`users-menu-btn ${showUsersPanel ? 'active' : ''}`}
-            onClick={onToggleUsersPanel}
-            title="Toggle users panel"
-          >
-            <Icon name={ICONS.users} size={18} />
-          </button>
+    <header className="topnav">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Link to="/" className="brand" aria-label="Planning Poker home">
+          <div className="brand-mark">P</div>
+          <span>Planning Poker</span>
+        </Link>
+        {sessionName && (
+          <div className={`sess-name${isConnected ? '' : ' offline'}`} title={sessionName}>
+            <span className="dot" />
+            <span>{sessionName}</span>
+            <span style={{ color: 'var(--fg-dim)', fontFamily: 'var(--font-mono)', fontSize: 11, marginLeft: 4 }}>
+              · {totalUsers}
+            </span>
+          </div>
         )}
-        <div className="header-title">
-          <h1><Icon name={ICONS.cards} size={28} className="brand-icon" /> Planning Poker</h1>
-          {sessionName && <span className="session-name">{sessionName}</span>}
-        </div>
+      </div>
+
+      <div className="right">
+        {currentUserName && (
+          <div className="welcome-chip">
+            <span>Hi, <strong>{currentUserName}</strong></span>
+            {onChangeName && (
+              <button
+                className="btn btn-ghost btn-icon"
+                onClick={onChangeName}
+                title="Change name"
+                aria-label="Change name"
+              >
+                <Icon name={ICONS.edit} size={14} />
+              </button>
+            )}
+          </div>
+        )}
+
         {onShareSession && sessionName && (
-          <button 
-            className="share-button-header"
+          <button
+            className="btn btn-sm"
             onClick={onShareSession}
             title="Copy session URL to clipboard"
           >
-            <Icon name={ICONS.share} size={16} />
+            <Icon name={ICONS.share} size={14} />
             <span>Share</span>
           </button>
         )}
-      </div>
-      <div className="connection-status">
-        {currentUserName && (
-          <div className="welcome-section">
-            <span className="welcome-message">Welcome, {currentUserName}</span>
-            <button 
-              className="settings-btn" 
-              onClick={onChangeName}
-              title="Change name"
-            >
-              <Icon name={ICONS.gear} size={16} />
-            </button>
-          </div>
-        )}
-        
-        {/* Theme Toggle */}
-        <div 
-          className="dark-mode-toggle" 
-          onClick={toggleTheme}
-          title={lightMode ? 'Switch to dark mode' : 'Switch to light mode'}
-        >
-          <span className="toggle-icon sun-icon"><Icon name={ICONS.sun} size={14} /></span>
-          <span className="toggle-icon moon-icon"><Icon name={ICONS.moon} size={14} /></span>
-          <div className="toggle-slider"></div>
-        </div>
 
-        <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-          <Icon name={isConnected ? ICONS.connected : ICONS.disconnected} size={14} />
-          {isConnected ? 'Connected' : 'Disconnected'}
-        </span>
-        <span className="user-count"><Icon name={ICONS.users} size={14} /> {totalUsers} online</span>
+        {onToggleUsersPanel && (
+          <button
+            className={`btn btn-ghost btn-icon${showUsersPanel ? ' active' : ''}`}
+            onClick={onToggleUsersPanel}
+            title="Toggle users panel"
+            aria-label="Toggle users panel"
+          >
+            <Icon name={ICONS.users} size={16} />
+          </button>
+        )}
+
+        <button
+          className="btn btn-ghost btn-icon"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label="Toggle theme"
+        >
+          <Icon name={theme === 'dark' ? ICONS.sun : ICONS.moon} size={16} />
+        </button>
+
+        {onOpenTweaks && (
+          <button
+            className="btn btn-ghost btn-icon"
+            onClick={onOpenTweaks}
+            title="Tweaks"
+            aria-label="Open tweaks"
+          >
+            <Icon name={ICONS.sliders} size={16} />
+          </button>
+        )}
       </div>
     </header>
   );

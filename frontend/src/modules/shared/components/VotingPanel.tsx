@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import * as anime from 'animejs';
+import React, { useEffect, useRef, useState } from 'react';
 import { Icon, ICONS } from '../../../components/Icons';
+import Card3D from '../../../components/Card3D';
+import Avatar from '../../../components/Avatar';
 import './VotingPanel.css';
 
 interface Vote {
@@ -20,6 +21,7 @@ interface UserStory {
   title: string;
   description?: string;
   acceptanceCriteria?: string;
+  tags?: string[];
   order: number;
   estimatedPoints?: string;
   isRevealed: boolean;
@@ -34,26 +36,23 @@ interface VotingPanelProps {
   socket?: any;
   onRevealVotes?: () => void;
   sessionClosed?: boolean;
+  onCopyLink?: () => void;
 }
 
 const CARD_VALUES = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
-const REACTION_EMOJIS = ['💩', '👀', '💔', '💯',  '😍', '🔪', '🍆', '👍', '👎'];
+const REACTION_EMOJIS = ['💩', '👀', '💔', '💯', '😍', '🔪', '🍆', '👍', '👎'];
 
-// Función utilitaria para obtener la clase de color según el valor de la carta
-const getCardValueClass = (value: string): string => {
-  const normalizedValue = value;
-  switch (normalizedValue) {
-    case '0': return 'value-0';
-    case '1': return 'value-1';
-    case '2': return 'value-2';
-    case '3': return 'value-3';
-    case '5': return 'value-5';
-    case '8': return 'value-8';
-    case '13': return 'value-13';
-    case '21': return 'value-21';
-    case '?': return 'value-question';
-    case '☕': return 'value-coffee';
-    default: return 'value-question'; // Fallback para valores no reconocidos
+const isUrl = (s: string) => /^https?:\/\//i.test(s);
+const displayStoryTitle = (raw: string): string => {
+  if (!isUrl(raw)) return raw;
+  try {
+    const u = new URL(raw);
+    const pathSegs = u.pathname.split('/').filter(Boolean);
+    const last = pathSegs[pathSegs.length - 1];
+    if (last) return `${u.hostname}${pathSegs.length ? '/' + last : ''}`;
+    return u.hostname;
+  } catch {
+    return raw;
   }
 };
 
@@ -64,7 +63,8 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   isCreator,
   socket,
   onRevealVotes,
-  sessionClosed
+  sessionClosed,
+  onCopyLink
 }) => {
   const [votes, setVotes] = useState<Vote[]>([]);
   const [myVote, setMyVote] = useState<string | null>(null);
@@ -73,43 +73,39 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   const [autoRevealed, setAutoRevealed] = useState(false);
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
   const [reactionCount, setReactionCount] = useState(0);
-
-  const cardsRef = useRef<(HTMLButtonElement | null)[]>([]);
-  const [selectedCard, setSelectedCard] = useState<number | null>(null);
+  const [flippingAll, setFlippingAll] = useState(false);
   const reactionCountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (currentStory) {
-      // Reset states when story changes to allow new voting
       setVotesRevealed(false);
       setAutoRevealed(false);
       setMyVote(null);
-      setSelectedCard(null);
-      
-      // Fetch votes for the new story
       fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
     } else {
       setVotes([]);
       setMyVote(null);
       setVotesRevealed(false);
       setAutoRevealed(false);
-      setSelectedCard(null); // Clear visual selection when no story
     }
   }, [currentStory]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // WebSocket listeners for real-time voting updates
+  useEffect(() => {
+    if (votesRevealed) {
+      setFlippingAll(true);
+      const id = setTimeout(() => setFlippingAll(false), 700);
+      return () => clearTimeout(id);
+    }
+  }, [votesRevealed]);
+
   useEffect(() => {
     if (!socket) return;
 
     const handleVoteSubmitted = (data: any) => {
-      console.log('Vote submitted:', data);
-      if (data.userStoryId === currentStory?.id) {
-        fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
-      }
+      if (data.userStoryId === currentStory?.id) fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
     };
 
     const handleVotesRevealed = (data: any) => {
-      console.log('Votes revealed:', data);
       if (data.userStoryId === currentStory?.id) {
         setVotesRevealed(true);
         setAutoRevealed(data.autoRevealed || false);
@@ -122,18 +118,13 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       setMyVote(null);
       setVotesRevealed(false);
       setAutoRevealed(false);
-      setSelectedCard(null); // Clear visual selection
-    };    const handleRoleChanged = (data: any) => {
-      console.log('User role changed:', data);
-      // Force re-render by clearing and refetching votes
-      if (currentStory) {
-        fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
-      }
+    };
+
+    const handleRoleChanged = () => {
+      if (currentStory) fetchVotes(); // eslint-disable-line react-hooks/exhaustive-deps
     };
 
     const handleVotingReset = (data: any) => {
-      console.log('Voting reset for story:', data.userStoryId);
-      // If this is the current story, clear all votes
       if (currentStory && currentStory.id === data.userStoryId) {
         setVotes([]);
         setMyVote(null);
@@ -143,10 +134,7 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
     };
 
     const handleReactionSent = (data: { emoji: string; userName: string }) => {
-      console.log('Received reaction from', data.userName, ':', data.emoji);
-      if (reactionsEnabled) {
-        createFallingEmoji(data.emoji);
-      }
+      if (reactionsEnabled) createFallingEmoji(data.emoji);
     };
 
     const handleReactionsToggled = (data: { enabled: boolean }) => {
@@ -170,122 +158,21 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
       socket.off('reaction-sent', handleReactionSent);
       socket.off('reactions-toggled', handleReactionsToggled);
     };
-  }, [socket, currentStory?.id]);
-
-  // Initialize card fan layout with hover animations
-  useEffect(() => {
-    if (!currentUser?.isSpectator && !isCreator && !votesRevealed && cardsRef.current.length > 0) {
-      const totalCards = CARD_VALUES.length;
-      const angleStep = 12; // Increased degrees between cards for better spacing
-      const startAngle = -((totalCards - 1) * angleStep) / 2;
-      const radius = 300; // Reduced radius for better positioning
-      const verticalOffset = 50; // Additional vertical offset to separate cards better
-
-      // Small delay to ensure DOM is ready
-      const timeoutId = setTimeout(() => {
-        cardsRef.current.forEach((card, index) => {
-          if (card) {
-            const angle = startAngle + index * angleStep;
-            const isSelected = selectedCard === index;
-            
-            // Calculate position in arc with improved spacing
-            const radian = (angle * Math.PI) / 180;
-            const x = Math.sin(radian) * radius;
-            const y = (Math.cos(radian) * radius * 0.6) - radius + verticalOffset; // Reduced arc depth and added offset
-            
-            // Set initial position and rotation with better spacing
-            const baseTransform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
-            card.style.transform = isSelected ? `${baseTransform} translateY(-60px) scale(1.15)` : baseTransform;
-            card.style.zIndex = String(isSelected ? 200 : 10 + index);
-            
-            // Force position to avoid overlap
-            card.style.position = 'absolute';
-            card.style.left = '50%';
-            card.style.bottom = '20px';
-            card.style.marginLeft = '-50px'; // Half of card width for centering
-
-            // Store base transform for animations
-            card.dataset.baseTransform = baseTransform;
-            card.dataset.angle = String(angle);
-
-            // Remove old listeners if any
-            const oldMouseEnter = (card as any)._mouseEnterHandler;
-            const oldMouseLeave = (card as any)._mouseLeaveHandler;
-            if (oldMouseEnter) card.removeEventListener('mouseenter', oldMouseEnter);
-            if (oldMouseLeave) card.removeEventListener('mouseleave', oldMouseLeave);
-
-            // Mouse enter animation
-            const handleMouseEnter = () => {
-              if (selectedCard !== index) {
-                anime.animate(card, {
-                  translateY: [0, -40],
-                  scale: [1, 1.05],
-                  duration: 400,
-                  easing: 'out-expo',
-                });
-                card.style.zIndex = '100';
-              }
-            };
-
-            // Mouse leave animation
-            const handleMouseLeave = () => {
-              if (selectedCard !== index) {
-                anime.animate(card, {
-                  translateY: [-40, 0],
-                  scale: [1.05, 1],
-                  duration: 400,
-                  easing: 'out-expo',
-                });
-                card.style.zIndex = String(index);
-              }
-            };
-
-            // Store handlers for cleanup
-            (card as any)._mouseEnterHandler = handleMouseEnter;
-            (card as any)._mouseLeaveHandler = handleMouseLeave;
-
-            card.addEventListener('mouseenter', handleMouseEnter);
-            card.addEventListener('mouseleave', handleMouseLeave);
-          }
-        });
-      }, 10); // Small delay to ensure DOM is fully ready
-
-      // Cleanup function
-      return () => {
-        clearTimeout(timeoutId);
-        cardsRef.current.forEach(card => {
-          if (card) {
-            const mouseEnter = (card as any)._mouseEnterHandler;
-            const mouseLeave = (card as any)._mouseLeaveHandler;
-            if (mouseEnter) card.removeEventListener('mouseenter', mouseEnter);
-            if (mouseLeave) card.removeEventListener('mouseleave', mouseLeave);
-          }
-        });
-      };
-    }
-  }, [currentUser?.isSpectator, isCreator, votesRevealed, selectedCard, currentStory?.id]);
+  }, [socket, currentStory?.id, reactionsEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchVotes = async () => {
     if (!currentStory) return;
-
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${currentStory.id}/votes`);
       if (response.ok) {
-        const fetchedVotes = await response.json();
-        console.log('Fetched votes:', fetchedVotes); // Debug line
-        setVotes(fetchedVotes);
-        
-        // Check if votes are revealed for this specific story
-        if (fetchedVotes.length > 0) {
-          const allRevealed = fetchedVotes.every((vote: Vote) => vote.isRevealed);
-          if (allRevealed && fetchedVotes[0].isRevealed) {
-            setVotesRevealed(true);
-          }
+        const fetched = await response.json();
+        setVotes(fetched);
+        if (fetched.length > 0) {
+          const allRevealed = fetched.every((v: Vote) => v.isRevealed);
+          if (allRevealed && fetched[0].isRevealed) setVotesRevealed(true);
         }
-        
-        // Find my vote
         if (currentUser) {
-          const userVote = fetchedVotes.find((vote: Vote) => vote.userId === currentUser.id);
+          const userVote = fetched.find((v: Vote) => v.userId === currentUser.id);
           setMyVote(userVote?.points || null);
         }
       }
@@ -296,38 +183,27 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
 
   const submitVote = async (points: string) => {
     if (!currentUser || !currentStory || currentUser.isSpectator || isCreator) return;
-
     setIsLoading(true);
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${currentStory.id}/votes`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          userName: currentUser.name,
-          points: points
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, userName: currentUser.name, points })
       });
-
       if (response.ok) {
         const result = await response.json();
         setMyVote(points);
-        
-        // Emit WebSocket event with auto-reveal information
         if (socket) {
           socket.emit('vote-submitted', {
             sessionId,
-            vote: result.vote || result, // Support both new and old API response
+            vote: result.vote || result,
             userId: currentUser.id,
             userName: currentUser.name,
             shouldAutoReveal: result.shouldAutoReveal,
             allVotes: result.allVotes
           });
         }
-
-        await fetchVotes(); // Refresh votes
+        await fetchVotes();
       }
     } catch (error) {
       console.error('Error submitting vote:', error);
@@ -338,30 +214,24 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
 
   const revealVotes = async () => {
     if (!currentStory) return;
-
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${currentStory.id}/votes/reveal`, {
-        method: 'PUT',
+        method: 'PUT'
       });
-
       if (response.ok) {
         const result = await response.json();
-        const revealedVotes = result.votes || result; // Support both old and new format
+        const revealed = result.votes || result;
         const userStory = result.userStory;
-        
         setVotesRevealed(true);
-        setVotes(revealedVotes);
-
-        // Emit WebSocket event with user story data
+        setVotes(revealed);
         if (socket) {
           socket.emit('votes-revealed', {
             sessionId,
             userStoryId: currentStory.id,
-            votes: revealedVotes,
-            userStory: userStory
+            votes: revealed,
+            userStory
           });
         }
-
         onRevealVotes?.();
       }
     } catch (error) {
@@ -371,25 +241,15 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
 
   const clearVotes = async () => {
     if (!currentStory) return;
-
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${currentStory.id}/votes`, {
-        method: 'DELETE',
+        method: 'DELETE'
       });
-
       if (response.ok) {
         setVotes([]);
         setMyVote(null);
         setVotesRevealed(false);
-        setSelectedCard(null); // Clear visual selection
-
-        // Emit WebSocket event
-        if (socket) {
-          socket.emit('votes-cleared', {
-            sessionId,
-            userStoryId: currentStory.id
-          });
-        }
+        if (socket) socket.emit('votes-cleared', { sessionId, userStoryId: currentStory.id });
       }
     } catch (error) {
       console.error('Error clearing votes:', error);
@@ -397,390 +257,315 @@ export const VotingPanel: React.FC<VotingPanelProps> = ({
   };
 
   const createFallingEmoji = (emoji: string) => {
-    console.log('Creating falling emoji:', emoji);
-    
-    // Use body or main container to cover full screen
     const container = document.body;
-    if (!container) {
-      console.warn('Body container not found');
-      return;
-    }
-
-    const emojiElement = document.createElement('div');
-    emojiElement.textContent = emoji;
-    emojiElement.className = 'falling-emoji-fullscreen';
-    
-    // Random horizontal position across full screen width
-    const randomX = Math.random() * (window.innerWidth - 50);
-    emojiElement.style.left = `${randomX}px`;
-    
-    container.appendChild(emojiElement);
-    console.log('Emoji added to body, starting fullscreen animation');
-
-    // Remove after animation completes
-    setTimeout(() => {
-      if (emojiElement.parentNode) {
-        emojiElement.parentNode.removeChild(emojiElement);
-        console.log('Emoji removed after fullscreen animation');
-      }
-    }, 4000);
+    if (!container) return;
+    const el = document.createElement('div');
+    el.textContent = emoji;
+    el.className = 'falling-emoji-fullscreen';
+    el.style.setProperty('--drift', `${Math.random() * 80 - 40}px`);
+    const randomX = Math.random() * (window.innerWidth - 60);
+    el.style.left = `${randomX}px`;
+    container.appendChild(el);
+    setTimeout(() => { el.parentNode && el.parentNode.removeChild(el); }, 3800);
   };
 
   const sendReaction = (emoji: string) => {
     if (!currentUser || !socket || !reactionsEnabled) return;
-
-    console.log('Sending reaction:', emoji);
-
-    // Create local falling animation immediately
     createFallingEmoji(emoji);
-
-    // Update reaction counter with visual feedback
     setReactionCount(prev => prev + 1);
-    
-    // Reset counter after 3 seconds
-    if (reactionCountTimeoutRef.current) {
-      clearTimeout(reactionCountTimeoutRef.current);
-    }
-    reactionCountTimeoutRef.current = setTimeout(() => {
-      setReactionCount(0);
-    }, 3000);
-
-    // Emit WebSocket event to others
+    if (reactionCountTimeoutRef.current) clearTimeout(reactionCountTimeoutRef.current);
+    reactionCountTimeoutRef.current = setTimeout(() => setReactionCount(0), 3000);
     socket.emit('reaction-sent', {
-      sessionId,
-      emoji,
-      userId: currentUser.id,
-      userName: currentUser.name
+      sessionId, emoji, userId: currentUser.id, userName: currentUser.name
     });
   };
 
   const toggleReactions = () => {
     if (!isCreator || !socket) return;
-
-    const newState = !reactionsEnabled;
-    setReactionsEnabled(newState);
-
-    // Emit WebSocket event
-    socket.emit('reactions-toggled', {
-      sessionId,
-      enabled: newState
-    });
+    const next = !reactionsEnabled;
+    setReactionsEnabled(next);
+    socket.emit('reactions-toggled', { sessionId, enabled: next });
   };
 
+  const votedCount = votes.length;
+  const isViewer = !!currentUser?.isSpectator;
+
+  // Metrics calculations
+  const numericVotes = votes.map(v => parseFloat(v.points)).filter(n => !isNaN(n));
+  const average = numericVotes.length ? (numericVotes.reduce((a, b) => a + b, 0) / numericVotes.length) : null;
+  const sorted = [...numericVotes].sort((a, b) => a - b);
+  const median = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2) : null;
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+  const consensus = votes.length > 0 && new Set(votes.map(v => v.points)).size === 1;
+  const showDiscuss = votesRevealed && numericVotes.length >= 2 && (max - min) >= 5;
+
+  // Distribution
+  const counts: Record<string, number> = {};
+  votes.forEach(v => { counts[v.points] = (counts[v.points] || 0) + 1; });
+  const maxCount = Math.max(1, ...Object.values(counts));
+  const distributionValues = Object.keys(counts).sort((a, b) => {
+    const na = parseFloat(a), nb = parseFloat(b);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    if (!isNaN(na)) return -1;
+    if (!isNaN(nb)) return 1;
+    return a.localeCompare(b);
+  });
+
+  // No story selected state
   if (!currentStory) {
     return (
-      <div className="voting-panel">
-        <div className="no-story">
-          <div className="no-story-icon"><Icon name={ICONS.cardDeck} size={48} /></div>
-          <h3>Ready to Vote</h3>
-          <p>Waiting for a story to be selected...</p>
-          {isCreator ? (
-            <p className="no-story-hint"><Icon name={ICONS.caretRight} size={14} /> Select a story above to start estimation</p>
-          ) : (
-            <p className="no-story-hint">The admin will select a story to estimate soon</p>
-          )}
+      <div className="stage stage-panel">
+        <div className="reveal-area">
+          <div className="empty-stage">
+            <div className="glyph"><Icon name={ICONS.cardDeck} size={22} /></div>
+            <h3>Ready to vote</h3>
+            <p>
+              {isCreator
+                ? 'Select a story from the left panel to start a round.'
+                : 'Waiting for the admin to pick a story.'}
+            </p>
+          </div>
         </div>
 
-        {/* Reactions Section - Always available */}
-        {!currentUser?.isSpectator && reactionsEnabled && !sessionClosed && (
-          <div className="reactions-section">
-            <div className="reactions-header">
-              <h4>React to the session:</h4>
-              {reactionCount > 0 && (
-                <div className="reaction-counter">
-                  +{reactionCount} <Icon name={ICONS.confetti} size={14} />
-                </div>
-              )}
-            </div>
-            <div className="reaction-emojis">
-              {REACTION_EMOJIS.map((emoji, index) => (
+        <div className="stage-footer">
+          {!isViewer && reactionsEnabled && !sessionClosed ? (
+            <div className="reactions-bar">
+              {REACTION_EMOJIS.map((emoji) => (
                 <button
-                  key={index}
-                  className="reaction-emoji"
-                  onClick={(e) => {
-                    // Visual feedback on click
-                    const button = e.currentTarget;
-                    button.style.transform = 'scale(0.8)';
-                    setTimeout(() => {
-                      button.style.transform = '';
-                    }, 150);
-                    
-                    sendReaction(emoji);
-                  }}
-                  title={`Send ${emoji} reaction - Click multiple times for more!`}
+                  key={emoji}
+                  className="reaction-btn"
+                  onClick={() => sendReaction(emoji)}
+                  title={`Send ${emoji}`}
                 >
                   {emoji}
                 </button>
               ))}
+              {reactionCount > 0 && (
+                <span className="reaction-count-badge">
+                  +{reactionCount} <Icon name={ICONS.confetti} size={11} />
+                </span>
+              )}
             </div>
-          </div>
-        )}
-
-        {/* Admin Controls - Always available */}
-        {isCreator && (
-          <div className="admin-controls">
+          ) : <span />}
+          {isCreator && (
             <button
               className={`btn btn-sm ${reactionsEnabled ? 'btn-warning' : 'btn-success'}`}
               onClick={toggleReactions}
-              title={reactionsEnabled ? 'Disable reactions' : 'Enable reactions'}
             >
-              <Icon name={reactionsEnabled ? ICONS.eyeSlash : ICONS.smiley} size={14} />
-              {reactionsEnabled ? ' Disable Reactions' : ' Enable Reactions'}
+              <Icon name={reactionsEnabled ? ICONS.eyeSlash : ICONS.smiley} size={12} />
+              {reactionsEnabled ? 'Disable reactions' : 'Enable reactions'}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     );
   }
 
+  const titleAsUrl = isUrl(currentStory.title);
+
   return (
-    <div className="voting-panel">
-      <div className="voting-header">
-        <h3><Icon name={ICONS.ballot} size={20} /> Estimating Story</h3>
-        <div className="current-story">
-          <h4>{currentStory.title}</h4>
-          {currentStory.description && (
-            <p className="story-description">{currentStory.description}</p>
+    <div className="stage stage-panel">
+      <div className="stage-header">
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="eyebrow">
+            {votesRevealed ? 'Revealed' : 'Estimating'}
+            {!votesRevealed && ` · ${votedCount} vote${votedCount === 1 ? '' : 's'}`}
+            {autoRevealed && votesRevealed && <> · <Icon name={ICONS.lightning} size={10} /> auto</>}
+          </div>
+          <h2>
+            {titleAsUrl ? (
+              <a href={currentStory.title} target="_blank" rel="noopener noreferrer">
+                {displayStoryTitle(currentStory.title)}
+              </a>
+            ) : currentStory.title}
+          </h2>
+          {currentStory.description && <div className="desc">{currentStory.description}</div>}
+          {currentStory.tags && currentStory.tags.length > 0 && (
+            <div className="stage-meta">
+              {currentStory.tags.map(tag => <span key={tag} className="tag">#{tag}</span>)}
+            </div>
+          )}
+        </div>
+
+        <div className="actions">
+          {onCopyLink && (
+            <button className="btn btn-sm" onClick={onCopyLink}>
+              <Icon name={ICONS.link} size={12} /> Copy link
+            </button>
+          )}
+          {isCreator && !sessionClosed && (
+            !votesRevealed ? (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={revealVotes}
+                disabled={votedCount === 0}
+              >
+                <Icon name={ICONS.eye} size={12} /> Reveal votes
+              </button>
+            ) : (
+              <button className="btn btn-sm" onClick={clearVotes}>
+                <Icon name={ICONS.refresh} size={12} /> New round
+              </button>
+            )
           )}
         </div>
       </div>
 
-      {/* Voting Cards */}
-      {!currentUser?.isSpectator && !isCreator && !votesRevealed && !sessionClosed && (
-        <div className="voting-section">
-          <h4>Select your estimate:</h4>
-          <div className="voting-cards">
-            {CARD_VALUES.map((value, index) => (
-              <button
-                key={value}
-                ref={(el) => { cardsRef.current[index] = el; }}
-                className={`voting-card ${myVote === value ? 'selected' : ''}`}
-                data-value={value}
-                onClick={() => {
-                  setSelectedCard(index);
-                  submitVote(value);
-                }}
-                disabled={isLoading}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
-          
-          {myVote && (
-            <div className="my-vote">
-              <Icon name={ICONS.checkCircle} size={16} /> Your vote: <span className="vote-value">{myVote}</span>
-            </div>
+      <div className="reveal-area">
+        <div className="reveal-inner">
+          {!votesRevealed ? (
+            <>
+              {!isViewer && !isCreator && !sessionClosed && (
+                <div className="card-grid-wrap">
+                  <div className="hint">
+                    {myVote ? (
+                      <>
+                        <Icon name={ICONS.check} size={12} /> Voted — <strong>{myVote}</strong>
+                      </>
+                    ) : 'Pick your estimate'}
+                    <div className="hint-sub">Tap a card. You can change your mind until reveal.</div>
+                  </div>
+                  <div className="card-grid">
+                    {CARD_VALUES.map(v => (
+                      <Card3D
+                        key={v}
+                        value={v}
+                        selected={myVote === v}
+                        onClick={() => !isLoading && submitVote(v)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(isCreator || isViewer) && (
+                <div className="empty-stage">
+                  <div className="glyph"><Icon name={ICONS.hourglass} size={22} /></div>
+                  <h3>{votedCount} vote{votedCount === 1 ? '' : 's'} in</h3>
+                  <p>
+                    {isCreator
+                      ? 'Waiting for players. Reveal whenever you’re ready.'
+                      : 'You’re observing. Votes will reveal once the admin decides.'}
+                  </p>
+                </div>
+              )}
+
+              {votes.length > 0 && !isCreator && !isViewer && (
+                <div style={{ fontSize: 12.5, color: 'var(--fg-dim)', textAlign: 'center' }}>
+                  <strong style={{ color: 'var(--fg-muted)' }}>{votedCount}</strong> submitted ·
+                  <span style={{ marginLeft: 4 }}>{votes.map(v => v.userName?.trim() || 'User').join(', ')}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="reveal-grid">
+                {votes.map((vote, idx) => (
+                  <div
+                    key={vote.id}
+                    className="vote-card-wrap"
+                    style={{ animationDelay: `${idx * 0.08}s` }}
+                  >
+                    <Card3D value={vote.points} flipping={flippingAll} />
+                    <div className="vote-user-name">{vote.userName?.trim() || 'User'}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="metrics">
+                <div className="metric">
+                  <div className="label">Average</div>
+                  <div className="value accent">
+                    {average != null ? Math.round(average * 10) / 10 : '—'}
+                  </div>
+                  <div className="sub">points</div>
+                </div>
+                <div className="metric">
+                  <div className="label">Median</div>
+                  <div className="value">{median != null ? median : '—'}</div>
+                </div>
+                <div className="metric">
+                  <div className="label">Spread</div>
+                  <div className="value">
+                    {min != null && max != null ? `${min}–${max}` : '—'}
+                  </div>
+                </div>
+                <div className="metric">
+                  <div className="label">Consensus</div>
+                  <div className="value">{consensus ? '✓' : '—'}</div>
+                  <div className="sub">{votes.length} votes</div>
+                </div>
+              </div>
+
+              <div className="distribution">
+                <div className="distribution-title">
+                  <span>Distribution</span>
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>{votes.length} total</span>
+                </div>
+                {distributionValues.map(v => (
+                  <div className="dist-row" key={v}>
+                    <span className="val">{v}</span>
+                    <div className="bar-wrap">
+                      <div className="bar" style={{ width: `${(counts[v] / maxCount) * 100}%` }} />
+                    </div>
+                    <span className="count">{counts[v]}</span>
+                  </div>
+                ))}
+              </div>
+
+              {showDiscuss && (
+                <div className="discuss-banner">
+                  <div className="glyph"><Icon name={ICONS.sparkle} size={14} /></div>
+                  <div className="copy">
+                    <strong>Let's discuss</strong>
+                    <span>Estimates are spread out. A brief discussion may help align.</span>
+                  </div>
+                  {isCreator && (
+                    <button className="btn btn-sm" onClick={clearVotes}>
+                      Re-estimate
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Reactions Section */}
-      {!currentUser?.isSpectator && reactionsEnabled && !sessionClosed && (
-        <div className="reactions-section">
-          <div className="reactions-header">
-            <h4>React to the session:</h4>
-            {reactionCount > 0 && (
-              <div className="reaction-counter">
-                +{reactionCount} 🎉
-              </div>
-            )}
-          </div>
-          <div className="reaction-emojis">
-            {REACTION_EMOJIS.map((emoji, index) => (
+      <div className="stage-footer">
+        {!isViewer && reactionsEnabled && !sessionClosed ? (
+          <div className="reactions-bar">
+            {REACTION_EMOJIS.map((emoji) => (
               <button
-                key={index}
-                className="reaction-emoji"
-                onClick={(e) => {
-                  // Visual feedback on click
-                  const button = e.currentTarget;
-                  button.style.transform = 'scale(0.8)';
-                  setTimeout(() => {
-                    button.style.transform = '';
-                  }, 150);
-                  
-                  sendReaction(emoji);
-                }}
-                title={`Send ${emoji} reaction - Click multiple times for more!`}
+                key={emoji}
+                className="reaction-btn"
+                onClick={() => sendReaction(emoji)}
+                title={`Send ${emoji}`}
               >
                 {emoji}
               </button>
             ))}
+            {reactionCount > 0 && (
+              <span className="reaction-count-badge">
+                +{reactionCount} <Icon name={ICONS.confetti} size={11} />
+              </span>
+            )}
           </div>
-        </div>
-      )}
+        ) : <span />}
 
-      {/* Admin Controls */}
-      {isCreator && (
-        <div className="admin-controls">
+        {isCreator && !sessionClosed && (
           <button
             className={`btn btn-sm ${reactionsEnabled ? 'btn-warning' : 'btn-success'}`}
             onClick={toggleReactions}
-            title={reactionsEnabled ? 'Disable reactions' : 'Enable reactions'}
           >
-            {reactionsEnabled ? '🙊 Disable Reactions' : '😍 Enable Reactions'}
+            <Icon name={reactionsEnabled ? ICONS.eyeSlash : ICONS.smiley} size={12} />
+            {reactionsEnabled ? 'Disable reactions' : 'Enable reactions'}
           </button>
-        </div>
-      )}
-
-      {/* Information messages for non-voters */}
-      {currentUser?.isSpectator && !votesRevealed && (
-        <div className="voting-info">
-          <p><Icon name={ICONS.eye} size={16} /> You are observing as a <strong>Viewer</strong> - you cannot vote</p>
-        </div>
-      )}
-
-      {isCreator && !votesRevealed && (
-        <div className="voting-info">
-          <p><Icon name={ICONS.crown} size={16} /> You are the <strong>Admin</strong> - you manage voting but cannot vote yourself</p>
-        </div>
-      )}
-
-      {/* Vote Status */}
-      <div className="vote-status">
-        <div className="vote-status-header">
-          <h4>Votes</h4>
-          {!votesRevealed && votes.length > 0 && (
-            <span className="vote-count-badge">
-              {votes.length} submitted
-            </span>
-          )}
-        </div>
-        
-        {votes.length > 0 ? (
-          <>
-            <div className="vote-cards">
-              {votes.map((vote, index) => {
-                const isRevealed = vote.isRevealed || votesRevealed;
-                const valueClass = isRevealed ? getCardValueClass(vote.points) : '';
-                
-                return (
-                  <div
-                    key={vote.id}
-                    className={`vote-card ${isRevealed ? 'revealed' : 'hidden'} ${valueClass}`}
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    {isRevealed ? vote.points : <Icon name={ICONS.cards} size={24} />}
-                    <div className="vote-user">{vote.userName?.trim() || 'User'}</div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {!votesRevealed && (
-              <div className="voters-list">
-                <span className="voters-label">Voted:</span> {votes.map(vote => vote.userName?.trim() || 'User').join(', ')}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="no-votes-yet">
-            <p><Icon name={ICONS.cardDeck} size={16} /> No votes yet — waiting for players...</p>
-          </div>
         )}
       </div>
-
-      {/* Results Section - ONLY shown to ALL users when votes are revealed */}
-      {votesRevealed && votes.length > 0 && (
-        <div className="vote-results">
-          <h4>
-            <Icon name={ICONS.chart} size={18} /> Results:
-            {autoRevealed && (
-              <span className="auto-reveal-indicator" title="Votes revealed automatically when all players voted">
-                {" "}<Icon name={ICONS.lightning} size={14} /> Auto-revealed
-              </span>
-            )}
-          </h4>
-          
-          {/* Unified Voting Metrics */}
-          <div className="voting-metrics">
-            <div className="metrics-summary">
-              <span className="metric-item">
-                <Icon name={ICONS.chartLine} size={14} /> Total Votes: <strong>{votes.length}</strong>
-              </span>
-              {(() => {
-                const numericVotes = votes
-                  .map(vote => parseFloat(vote.points))
-                  .filter(value => !isNaN(value));
-                
-                if (numericVotes.length > 0) {
-                  const average = (numericVotes.reduce((sum, val) => sum + val, 0) / numericVotes.length).toFixed(1);
-                  return (
-                    <span className="metric-item">
-                      <Icon name={ICONS.target} size={14} /> Average: <strong>{average} points</strong>
-                    </span>
-                  );
-                }
-                return null;
-              })()}
-            </div>
-          </div>
-          
-          {/* Detailed Vote Breakdown */}
-          <div className="results-breakdown">
-            <h5><Icon name={ICONS.clipboard} size={14} /> Vote Distribution:</h5>
-            <div className="results-summary">
-              {(() => {
-                const pointCounts = votes.reduce((acc: { [key: string]: number }, vote) => {
-                  acc[vote.points] = (acc[vote.points] || 0) + 1;
-                  return acc;
-                }, {});
-                
-                return Object.entries(pointCounts)
-                  .sort(([a], [b]) => {
-                    // Sort numerically if both are numbers, otherwise alphabetically
-                    const numA = parseFloat(a);
-                    const numB = parseFloat(b);
-                    if (!isNaN(numA) && !isNaN(numB)) {
-                      return numA - numB;
-                    }
-                    return a.localeCompare(b);
-                  })
-                  .map(([points, count]) => (
-                    <span key={points} className="result-item">
-                      {points}: {count} vote{count !== 1 ? 's' : ''}
-                    </span>
-                  ));
-              })()}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reveal/Clear Actions */}
-      {votes.length > 0 && (
-        <div className="voting-actions">
-          {!votesRevealed ? (
-            isCreator ? (
-              <button
-                className="btn btn-primary reveal-btn"
-                onClick={revealVotes}
-              >
-                <Icon name={ICONS.search} size={16} /> Reveal Votes
-              </button>
-            ) : (
-              <div className="voting-message">
-                <p><Icon name={ICONS.hourglass} size={14} /> Waiting for admin to reveal votes...</p>
-              </div>
-            )
-          ) : (
-            <div className="revealed-actions">
-              {isCreator ? (
-                <button
-                  className="btn btn-secondary clear-btn"
-                  onClick={clearVotes}
-                >
-                  <Icon name={ICONS.refresh} size={16} /> New Vote
-                </button>
-              ) : (
-                <div className="voting-message">
-                  <p><Icon name={ICONS.crown} size={14} /> Only the admin can start a new voting round</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
+
+export default VotingPanel;

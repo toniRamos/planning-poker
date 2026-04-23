@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Icon, ICONS } from '../../../components/Icons';
 import './UserStoryManager.css';
 
@@ -20,10 +20,25 @@ interface UserStoryManagerProps {
   isCreator: boolean;
   currentStoryId?: string;
   onStoryChange?: () => void;
-  socket?: any; // Socket instance to emit events
+  socket?: any;
   sessionClosed?: boolean;
   onSessionClose?: () => void;
 }
+
+const isUrl = (s: string): boolean => /^https?:\/\//i.test(s);
+
+const displayStoryTitle = (raw: string): string => {
+  if (!isUrl(raw)) return raw;
+  try {
+    const u = new URL(raw);
+    const pathSegs = u.pathname.split('/').filter(Boolean);
+    const last = pathSegs[pathSegs.length - 1];
+    if (last) return `${u.hostname}${pathSegs.length ? '/' + last : ''}`;
+    return u.hostname;
+  } catch {
+    return raw;
+  }
+};
 
 export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   sessionId,
@@ -37,99 +52,71 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   const [userStories, setUserStories] = useState<UserStory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newStory, setNewStory] = useState({
-    title: '',
-    tags: [] as string[]
-  });
+  const [newStory, setNewStory] = useState<{ title: string; tags: string[] }>({ title: '', tags: [] });
   const [tagInput, setTagInput] = useState('');
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     fetchUserStories();
   }, [sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // WebSocket listeners for real-time updates
+  useEffect(() => {
+    if (showAddForm) titleInputRef.current?.focus();
+  }, [showAddForm]);
+
   useEffect(() => {
     if (!socket) return;
 
     const handleUserStoryUpdated = (data: any) => {
-      console.log('User story update received:', data);
-      
       switch (data.action) {
         case 'added':
           setUserStories(prev => [...prev, data.userStory]);
           break;
         case 'updated':
-          setUserStories(prev => prev.map(story => 
-            story.id === data.userStory.id ? data.userStory : story
-          ));
+          setUserStories(prev => prev.map(s => s.id === data.userStory.id ? data.userStory : s));
           break;
         case 'deleted':
-          setUserStories(prev => prev.filter(story => story.id !== data.userStoryId));
+          setUserStories(prev => prev.filter(s => s.id !== data.userStoryId));
           break;
         case 'reordered':
           setUserStories(data.userStories);
           break;
         default:
-          // Refresh all stories for unknown actions
           fetchUserStories();
       }
     };
 
-    const handleCurrentStoryChanged = (data: any) => {
-      console.log('Current story changed:', data.currentStoryId);
-      onStoryChange?.();
-    };
+    const handleCurrentStoryChanged = () => onStoryChange?.();
 
     const handleStoryRevealed = (data: any) => {
-      console.log('Story revealed:', data.userStory);
-      setUserStories(prev => prev.map(story => 
-        story.id === data.userStory.id ? { 
-          ...story, 
-          isRevealed: true,
-          estimatedPoints: data.userStory.estimatedPoints 
-        } : story
+      setUserStories(prev => prev.map(s =>
+        s.id === data.userStory.id ? { ...s, isRevealed: true, estimatedPoints: data.userStory.estimatedPoints } : s
       ));
     };
 
-    const handleRoleChanged = (data: any) => {
-      console.log('Role changed, refreshing user story manager:', data);
-      // Force re-render by refreshing user stories
-      fetchUserStories(); // eslint-disable-line react-hooks/exhaustive-deps
-      onStoryChange?.(); // Trigger parent refresh
+    const handleRoleChanged = () => {
+      fetchUserStories();
+      onStoryChange?.();
     };
 
     const handleStoryScoreToggled = (data: any) => {
-      console.log('Story score toggled:', data.userStory);
-      setUserStories(prev => prev.map(story => 
-        story.id === data.userStory.id ? { 
-          ...story, 
-          isScored: data.userStory.isScored,
-          estimatedPoints: data.userStory.estimatedPoints 
-        } : story
+      setUserStories(prev => prev.map(s =>
+        s.id === data.userStory.id ? { ...s, isScored: data.userStory.isScored, estimatedPoints: data.userStory.estimatedPoints } : s
       ));
     };
 
     const handleVotingReset = (data: any) => {
-      console.log('Voting reset for story:', data.userStoryId);
-      setUserStories(prev => prev.map(story => 
-        story.id === data.userStoryId ? { ...story, isRevealed: false, estimatedPoints: undefined } : story
+      setUserStories(prev => prev.map(s =>
+        s.id === data.userStoryId ? { ...s, isRevealed: false, estimatedPoints: undefined } : s
       ));
-      // Trigger parent refresh to update voting panel
-      if (currentStoryId === data.userStoryId) {
-        onStoryChange?.();
-      }
+      if (currentStoryId === data.userStoryId) onStoryChange?.();
     };
 
     const handleVotesRevealed = (data: any) => {
-      console.log('Votes revealed in UserStoryManager:', data);
       if (data.userStory) {
-        setUserStories(prev => prev.map(story => 
-          story.id === data.userStory.id ? { 
-            ...story, 
-            isRevealed: true,
-            estimatedPoints: data.userStory.estimatedPoints 
-          } : story
+        setUserStories(prev => prev.map(s =>
+          s.id === data.userStory.id ? { ...s, isRevealed: true, estimatedPoints: data.userStory.estimatedPoints } : s
         ));
       }
     };
@@ -167,31 +154,20 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
 
   const addUserStory = async () => {
     if (!newStory.title.trim()) return;
-
     setIsLoading(true);
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newStory),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStory)
       });
-
       if (response.ok) {
-        const addedStory = await response.json();
-        setUserStories([...userStories, addedStory]);
+        const added = await response.json();
+        setUserStories(prev => [...prev, added]);
         setNewStory({ title: '', tags: [] });
         setTagInput('');
         setShowAddForm(false);
-        
-        // Emit WebSocket event to notify other users
-        if (socket) {
-          socket.emit('user-story-added', {
-            sessionId,
-            userStory: addedStory
-          });
-        }
+        if (socket) socket.emit('user-story-added', { sessionId, userStory: added });
       }
     } catch (error) {
       console.error('Error adding user story:', error);
@@ -203,76 +179,28 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   const setCurrentStory = async (storyId: string) => {
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}/set-current`, {
-        method: 'PUT',
+        method: 'PUT'
       });
-
       if (response.ok) {
-        // Notify parent component to refresh session data
         onStoryChange?.();
-        
-        // Emit WebSocket event to notify other users
-        if (socket) {
-          socket.emit('current-story-changed', {
-            sessionId,
-            currentStoryId: storyId
-          });
-        }
+        if (socket) socket.emit('current-story-changed', { sessionId, currentStoryId: storyId });
       }
     } catch (error) {
       console.error('Error setting current story:', error);
     }
   };
 
-  const revealCurrentStory = async () => {
-    try {
-      const response = await fetch(`/api/sessions/${sessionId}/user-stories/reveal`, {
-        method: 'PUT',
-      });
-
-      if (response.ok) {
-        await fetchUserStories(); // Refresh to get updated reveal status
-        
-        // Emit WebSocket event to notify other users
-        if (socket && currentStoryId) {
-          const currentStory = userStories.find(story => story.id === currentStoryId);
-          if (currentStory) {
-            socket.emit('story-revealed', {
-              sessionId,
-              userStory: { ...currentStory, isRevealed: true }
-            });
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error revealing story:', error);
-    }
-  };
-
   const reorderStories = async (newOrder: UserStory[]) => {
-    const userStoryOrders = newOrder.map((story, index) => ({
-      id: story.id,
-      order: index
-    }));
-
+    const userStoryOrders = newOrder.map((story, index) => ({ id: story.id, order: index }));
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/reorder`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userStoryOrders }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userStoryOrders })
       });
-
       if (response.ok) {
         setUserStories(newOrder);
-        
-        // Emit WebSocket event to notify other users
-        if (socket) {
-          socket.emit('user-stories-reordered', {
-            sessionId,
-            userStories: newOrder
-          });
-        }
+        if (socket) socket.emit('user-stories-reordered', { sessionId, userStories: newOrder });
       }
     } catch (error) {
       console.error('Error reordering stories:', error);
@@ -280,23 +208,12 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   };
 
   const deleteUserStory = async (storyId: string) => {
-    if (!window.confirm('Are you sure you want to delete this story?')) return;
-
+    if (!window.confirm('Delete this story?')) return;
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}`, { method: 'DELETE' });
       if (response.ok) {
-        setUserStories(userStories.filter(story => story.id !== storyId));
-        
-        // Emit WebSocket event to notify other users
-        if (socket) {
-          socket.emit('user-story-deleted', {
-            sessionId,
-            userStoryId: storyId
-          });
-        }
+        setUserStories(prev => prev.filter(s => s.id !== storyId));
+        if (socket) socket.emit('user-story-deleted', { sessionId, userStoryId: storyId });
       }
     } catch (error) {
       console.error('Error deleting user story:', error);
@@ -306,22 +223,12 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   const toggleUserStoryScore = async (storyId: string) => {
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}/toggle-score`, {
-        method: 'PUT',
+        method: 'PUT'
       });
-
       if (response.ok) {
-        const updatedUserStory = await response.json();
-        setUserStories(prev => prev.map(story => 
-          story.id === storyId ? updatedUserStory : story
-        ));
-        
-        // Emit WebSocket event to notify other users
-        if (socket) {
-          socket.emit('story-score-toggled', {
-            sessionId,
-            userStory: updatedUserStory
-          });
-        }
+        const updated = await response.json();
+        setUserStories(prev => prev.map(s => s.id === storyId ? updated : s));
+        if (socket) socket.emit('story-score-toggled', { sessionId, userStory: updated });
       }
     } catch (error) {
       console.error('Error toggling user story score:', error);
@@ -329,31 +236,16 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   };
 
   const resetUserStoryVoting = async (storyId: string) => {
-    if (!window.confirm('Are you sure you want to re-estimate this story? All current votes will be deleted.')) return;
-
+    if (!window.confirm('Re-estimate this story? All current votes will be deleted.')) return;
     try {
       const response = await fetch(`/api/sessions/${sessionId}/user-stories/${storyId}/reset-voting`, {
-        method: 'PUT',
+        method: 'PUT'
       });
-
       if (response.ok) {
-        const updatedUserStory = await response.json();
-        setUserStories(prev => prev.map(story => 
-          story.id === storyId ? updatedUserStory : story
-        ));
-        
-        // Emit WebSocket event to notify other users
-        if (socket) {
-          socket.emit('voting-reset', {
-            sessionId,
-            userStoryId: storyId
-          });
-        }
-
-        // If this was the current story, refresh it
-        if (currentStoryId === storyId) {
-          onStoryChange?.();
-        }
+        const updated = await response.json();
+        setUserStories(prev => prev.map(s => s.id === storyId ? updated : s));
+        if (socket) socket.emit('voting-reset', { sessionId, userStoryId: storyId });
+        if (currentStoryId === storyId) onStoryChange?.();
       }
     } catch (error) {
       console.error('Error resetting user story voting:', error);
@@ -361,21 +253,11 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
   };
 
   const closeSession = async () => {
-    if (!window.confirm('Are you sure you want to close this session? This action cannot be undone and will lock the session permanently.')) return;
-
+    if (!window.confirm('Close this session? This action cannot be undone and will lock the session permanently.')) return;
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/close`, {
-        method: 'PUT',
-      });
-
+      const response = await fetch(`/api/sessions/${sessionId}/close`, { method: 'PUT' });
       if (response.ok) {
-        // Emit WebSocket event to notify other users
-        if (socket) {
-          socket.emit('session-closed', {
-            sessionId
-          });
-        }
-
+        if (socket) socket.emit('session-closed', { sessionId });
         onSessionClose?.();
       }
     } catch (error) {
@@ -383,248 +265,246 @@ export const UserStoryManager: React.FC<UserStoryManagerProps> = ({
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedItem(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
+  const handleDragStart = (index: number) => setDraggedItem(index);
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    
     if (draggedItem === null || draggedItem === dropIndex) return;
-
-    const newStories = [...userStories];
-    const draggedStory = newStories[draggedItem];
-    
-    newStories.splice(draggedItem, 1);
-    newStories.splice(dropIndex, 0, draggedStory);
-    
+    const next = [...userStories];
+    const moved = next[draggedItem];
+    next.splice(draggedItem, 1);
+    next.splice(dropIndex, 0, moved);
     setDraggedItem(null);
-    reorderStories(newStories);
+    reorderStories(next);
+  };
+
+  const addTag = () => {
+    const t = tagInput.trim();
+    if (!t) return;
+    if (!newStory.tags.includes(t)) setNewStory({ ...newStory, tags: [...newStory.tags, t] });
+    setTagInput('');
   };
 
   return (
-    <div className="user-story-manager">
-      <div className="story-header">
-        <h3>User Stories ({userStories.length})</h3>
-        {isCreator && !sessionClosed && (
-          <div className="story-actions">
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowAddForm(true)}
-            >
-              + Add Story
-            </button>
-            <button 
-              className="btn btn-danger"
-              onClick={closeSession}
-            >
-              <Icon name={ICONS.lock} size={14} /> Close Session
-            </button>
-          </div>
-        )}
-        {sessionClosed && (
-          <div className="session-closed-badge">
-            <Icon name={ICONS.lock} size={14} /> Session Closed
-          </div>
-        )}
+    <>
+      <div className="panel-header">
+        <h3>
+          Stories <span className="count">{userStories.length}</span>
+        </h3>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          {sessionClosed ? (
+            <span className="badge badge-danger badge-dot">
+              <Icon name={ICONS.lock} size={11} /> Closed
+            </span>
+          ) : (
+            isCreator && (
+              <>
+                <button
+                  className="btn btn-ghost btn-icon"
+                  onClick={() => setShowAddForm(true)}
+                  title="Add story"
+                  aria-label="Add story"
+                >
+                  <Icon name={ICONS.plus} size={14} />
+                </button>
+                <button
+                  className="btn btn-ghost btn-icon btn-danger"
+                  onClick={closeSession}
+                  title="Close session"
+                  aria-label="Close session"
+                >
+                  <Icon name={ICONS.lock} size={14} />
+                </button>
+              </>
+            )
+          )}
+        </div>
       </div>
 
-      {showAddForm && (
-        <div className="add-story-form">
-          <div className="form-group">
-            <label>User Story URL *</label>
+      <div className="panel-body">
+        {showAddForm && (
+          <div className="story-inline-form">
             <input
+              ref={titleInputRef}
               type="text"
+              className="input"
               value={newStory.title}
               onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
-              placeholder="https://jira.example.com/browse/PROJ-123"
+              placeholder="Story URL or title…"
               maxLength={500}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newStory.title.trim()) { e.preventDefault(); addUserStory(); }
+                if (e.key === 'Escape') setShowAddForm(false);
+              }}
             />
-          </div>
-          
-          <div className="form-group">
-            <label>Tags (Optional)</label>
-            <div className="tags-input-container">
-              <div className="tags-list">
-                {newStory.tags.map((tag, index) => (
-                  <span key={index} className="tag-item">
-                    {tag}
+            {newStory.tags.length > 0 && (
+              <div className="tags-chips">
+                {newStory.tags.map((tag, i) => (
+                  <span key={i} className="tag-chip">
+                    #{tag}
                     <button
                       type="button"
                       className="tag-remove"
-                      onClick={() => {
-                        const newTags = newStory.tags.filter((_, i) => i !== index);
-                        setNewStory({ ...newStory, tags: newTags });
-                      }}
-                      title="Remove tag"
-                    >
-                      ×
-                    </button>
+                      onClick={() => setNewStory({ ...newStory, tags: newStory.tags.filter((_, idx) => idx !== i) })}
+                      aria-label="Remove tag"
+                    >×</button>
                   </span>
                 ))}
               </div>
-              <div className="tag-input-wrapper">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && tagInput.trim()) {
-                      e.preventDefault();
-                      if (!newStory.tags.includes(tagInput.trim())) {
-                        setNewStory({ ...newStory, tags: [...newStory.tags, tagInput.trim()] });
-                      }
-                      setTagInput('');
-                    }
-                  }}
-                  placeholder="Type a tag and press Enter"
-                  maxLength={50}
-                />
-                {tagInput.trim() && (
-                  <button
-                    type="button"
-                    className="btn-add-tag"
-                    onClick={() => {
-                      if (!newStory.tags.includes(tagInput.trim())) {
-                        setNewStory({ ...newStory, tags: [...newStory.tags, tagInput.trim()] });
-                      }
-                      setTagInput('');
-                    }}
-                  >
-                    + Add
-                  </button>
-                )}
-              </div>
-            </div>
-            <small className="form-hint">Examples: Epic-UserManagement, Backend, Frontend, Mobile, etc.</small>
-          </div>
-          
-          <div className="form-actions">
-            <button 
-              className="btn btn-primary"
-              onClick={addUserStory}
-              disabled={isLoading || !newStory.title.trim()}
-            >
-              {isLoading ? 'Adding...' : 'Add Story'}
-            </button>
-            <button 
-              className="btn btn-secondary"
-              onClick={() => {
-                setShowAddForm(false);
-                setNewStory({ title: '', tags: [] });
-                setTagInput('');
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="stories-list">
-        {userStories.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon"><Icon name={ICONS.clipboard} size={48} /></div>
-            <h4>No stories yet</h4>
-            {isCreator ? (
-              <>
-                <p>Add your first user story to start estimating with your team.</p>
-                <button 
-                  className="btn btn-primary empty-state-cta"
-                  onClick={() => setShowAddForm(true)}
-                >
-                  + Add First Story
-                </button>
-              </>
-            ) : (
-              <p>Waiting for the admin to add stories...</p>
             )}
+            <input
+              type="text"
+              className="input"
+              style={{ fontSize: 12.5 }}
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              placeholder="Add tag and press Enter (optional)"
+              maxLength={50}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && tagInput.trim()) { e.preventDefault(); addTag(); }
+              }}
+            />
+            <div className="inline-actions">
+              <button
+                className="btn btn-ghost btn-sm"
+                type="button"
+                onClick={() => { setShowAddForm(false); setNewStory({ title: '', tags: [] }); setTagInput(''); }}
+              >Cancel</button>
+              <button
+                className="btn btn-primary btn-sm"
+                type="button"
+                onClick={addUserStory}
+                disabled={isLoading || !newStory.title.trim()}
+              >
+                {isLoading ? 'Adding…' : 'Add'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {userStories.length === 0 && !showAddForm ? (
+          <div className="story-empty">
+            <div className="glyph"><Icon name={ICONS.clipboard} size={18} /></div>
+            <h4>No stories yet</h4>
+            <p>{isCreator ? 'Add your first story to start estimating.' : 'Waiting for admin to add stories…'}</p>
           </div>
         ) : (
-          userStories.map((story, index) => (
-            <div
-              key={story.id}
-              className={`story-item ${currentStoryId === story.id ? 'current' : ''} ${story.isScored ? 'scored' : ''}`}
-              draggable={isCreator}
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-            >
-              <div className="story-content">
-                <div className="story-header-item">
-                  <span className="story-order">#{story.order + 1}</span>
-                  <a 
-                    href={story.title} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={`story-title-link ${story.isScored ? 'scored' : ''}`}
-                  >
-                    {story.title}
-                  </a>
-                  {story.estimatedPoints && (
-                    <span className="estimate-inline"><Icon name={ICONS.chart} size={12} /> {story.estimatedPoints} pts</span>
-                  )}
-                  {currentStoryId === story.id && (
-                    <span className="current-badge">Current</span>
-                  )}
-                  {story.isScored && (
-                    <span className="scored-badge"><Icon name={ICONS.checkCircle} size={12} /> Scored</span>
-                  )}
-                </div>
-                
-                {story.tags && story.tags.length > 0 && (
-                  <div className="story-tags">
-                    {story.tags.map((tag, tagIndex) => (
-                      <span key={tagIndex} className="story-tag">
-                        {tag}
+          <>
+            {userStories.map((story, index) => {
+              const isCurrent = currentStoryId === story.id;
+              const titleAsUrl = isUrl(story.title);
+              return (
+                <div
+                  key={story.id}
+                  className={`story-item ${isCurrent ? 'current' : ''}`}
+                  draggable={isCreator && !sessionClosed}
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onClick={() => {
+                    if (isCreator && !sessionClosed && !isCurrent) setCurrentStory(story.id);
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                    <div className="title">
+                      <span style={{ color: 'var(--fg-dim)', fontFamily: 'var(--font-mono)', fontSize: 11, marginRight: 6 }}>
+                        #{story.order + 1}
                       </span>
-                    ))}
+                      {titleAsUrl ? (
+                        <a
+                          href={story.title}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {displayStoryTitle(story.title)}
+                        </a>
+                      ) : story.title}
+                    </div>
+                    {story.estimatedPoints != null && (
+                      <div className="points-chip">{story.estimatedPoints}</div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {isCreator && !sessionClosed && (
-                <div className="story-actions-item">
-                  {currentStoryId !== story.id && (
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => setCurrentStory(story.id)}
-                    >
-                      Estimate now
-                    </button>
+                  {story.tags && story.tags.length > 0 && (
+                    <div className="tags">
+                      {story.tags.map(tag => (
+                        <span key={tag} className="tag">#{tag}</span>
+                      ))}
+                    </div>
                   )}
-                  {currentStoryId === story.id && (
-                    <button
-                      className="btn btn-sm btn-warning"
-                      onClick={() => resetUserStoryVoting(story.id)}
-                      title="Reset votes and re-estimate this story"
+
+                  <div className="meta">
+                    {story.isRevealed ? (
+                      <span style={{ color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name={ICONS.check} size={11} /> Estimated
+                      </span>
+                    ) : isCurrent ? (
+                      <span style={{ color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span className="dot" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
+                        Estimating
+                      </span>
+                    ) : (
+                      <span>Pending</span>
+                    )}
+                    {story.isScored && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name={ICONS.checkCircle} size={11} style={{ color: 'var(--success)' }} /> Scored
+                      </span>
+                    )}
+                  </div>
+
+                  {isCreator && !sessionClosed && (
+                    <div
+                      className="row-actions"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Icon name={ICONS.refresh} size={12} /> Re-estimate
-                    </button>
+                      {!isCurrent && (
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => setCurrentStory(story.id)}
+                        >
+                          <Icon name={ICONS.caretRight} size={11} /> Estimate
+                        </button>
+                      )}
+                      {isCurrent && (
+                        <button
+                          className="btn btn-sm btn-warning"
+                          onClick={() => resetUserStoryVoting(story.id)}
+                          title="Reset votes"
+                        >
+                          <Icon name={ICONS.refresh} size={11} /> Reset
+                        </button>
+                      )}
+                      <button
+                        className={`btn btn-sm ${story.isScored ? 'btn-success' : ''}`}
+                        onClick={() => toggleUserStoryScore(story.id)}
+                        title={story.isScored ? 'Mark as not scored' : 'Mark as scored'}
+                      >
+                        <Icon name={story.isScored ? ICONS.checkCircle : ICONS.check} size={11} />
+                        {story.isScored ? 'Scored' : 'Mark'}
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => deleteUserStory(story.id)}
+                        title="Delete story"
+                      >
+                        <Icon name={ICONS.trash} size={11} />
+                      </button>
+                    </div>
                   )}
-                  <button
-                    className={`btn btn-sm ${story.isScored ? 'btn-success' : 'btn-secondary'}`}
-                    onClick={() => toggleUserStoryScore(story.id)}
-                    title={story.isScored ? 'Mark as not scored' : 'Mark as scored'}
-                  >
-                    <Icon name={story.isScored ? ICONS.checkCircle : ICONS.check} size={12} /> {story.isScored ? 'Scored' : 'Mark'}
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => deleteUserStory(story.id)}
-                  >
-                    Delete
-                  </button>
                 </div>
-              )}
-            </div>
-          ))
+              );
+            })}
+
+            {isCreator && !sessionClosed && !showAddForm && (
+              <button className="add-story-btn" onClick={() => setShowAddForm(true)}>
+                <Icon name={ICONS.plus} size={12} /> Add story
+              </button>
+            )}
+          </>
         )}
       </div>
-    </div>
+    </>
   );
 };

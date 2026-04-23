@@ -15,7 +15,6 @@ const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectator
   const [isJoining, setIsJoining] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus the name input when connected
   useEffect(() => {
     if (isConnected && inputRef.current) {
       inputRef.current.focus();
@@ -27,90 +26,86 @@ const JoinForm: React.FC<JoinFormProps> = ({ isConnected, onJoin, allowSpectator
     if (nameInput.trim() && !isJoining) {
       setIsJoining(true);
       onJoin(nameInput.trim(), selectedRole);
-      // Reset joining state after a short delay (in case of error)
       setTimeout(() => setIsJoining(false), 2000);
     }
   };
 
   return (
-    <div className="join-form-container">
-      <h2>Join the Session</h2>
-      
-      {/* Connection status indicator */}
+    <form onSubmit={handleSubmit} className="join-card">
       <div className={`connection-badge ${isConnected ? 'connected' : 'connecting'}`}>
-        <Icon name={isConnected ? ICONS.connected : ICONS.loading} size={14} className={isConnected ? '' : 'spin'} />
-        {isConnected ? ' Connected' : ' Connecting...'}
+        <Icon
+          name={isConnected ? ICONS.connected : ICONS.loading}
+          size={12}
+          className={isConnected ? '' : 'spin'}
+        />
+        {isConnected ? 'Connected' : 'Connecting…'}
       </div>
-      
-      <form onSubmit={handleSubmit} className="join-form">
-        <div className="input-group">
-          <label htmlFor="name">What's your name?</label>
-          <input
-            ref={inputRef}
-            id="name"
-            type="text"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            placeholder="Enter your name..."
-            required
-            maxLength={30}
-            disabled={!isConnected}
-          />
-        </div>
 
-        {allowSpectators && (
-          <div className="role-selection">
-            <label>Choose your role:</label>
-            <div className="role-options">
-              <label className="role-option">
-                <input
-                  type="radio"
-                  name="role"
-                  value={UserRole.PLAYER}
-                  checked={selectedRole === UserRole.PLAYER}
-                  onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                />
-                <span className="role-label">
-                  <Icon name={ICONS.target} size={16} /> <strong>Player</strong> - Can participate in voting
-                </span>
-              </label>
-              <label className="role-option">
-                <input
-                  type="radio"
-                  name="role"
-                  value={UserRole.VIEWER}
-                  checked={selectedRole === UserRole.VIEWER}
-                  onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                />
-                <span className="role-label">
-                  <Icon name={ICONS.eye} size={16} /> <strong>Viewer</strong> - Can observe without voting
-                </span>
-              </label>
-            </div>
+      <div className="field">
+        <label htmlFor="join-name">Your name</label>
+        <input
+          ref={inputRef}
+          id="join-name"
+          className="input"
+          type="text"
+          value={nameInput}
+          onChange={(e) => setNameInput(e.target.value)}
+          placeholder="Enter your name…"
+          required
+          maxLength={30}
+          disabled={!isConnected}
+        />
+      </div>
+
+      {allowSpectators && (
+        <div className="field">
+          <label>Join as</label>
+          <div className="tw-options">
+            <button
+              type="button"
+              className={`tw-option ${selectedRole === UserRole.PLAYER ? 'active' : ''}`}
+              onClick={() => setSelectedRole(UserRole.PLAYER)}
+            >
+              <Icon name={ICONS.target} size={12} /> Player
+            </button>
+            <button
+              type="button"
+              className={`tw-option ${selectedRole === UserRole.VIEWER ? 'active' : ''}`}
+              onClick={() => setSelectedRole(UserRole.VIEWER)}
+            >
+              <Icon name={ICONS.eye} size={12} /> Viewer
+            </button>
           </div>
-        )}
-
-        <div className="join-buttons">
-          <button 
-            type="submit" 
-            disabled={!isConnected || !nameInput.trim() || isJoining}
-            className={isJoining ? 'loading' : ''}
-          >
-            {isJoining ? (
-              <>
-                <span className="spinner"></span>
-                Joining...
-              </>
-            ) : (
-              <>
-                <Icon name={selectedRole === UserRole.PLAYER ? ICONS.target : ICONS.eye} size={16} />
-                {selectedRole === UserRole.PLAYER ? ' Join as Player' : ' Join as Viewer'}
-              </>
-            )}
-          </button>
+          <div className="hint">
+            {selectedRole === UserRole.PLAYER
+              ? 'Players submit estimates during voting rounds.'
+              : 'Viewers observe the session but don’t vote.'}
+          </div>
         </div>
-      </form>
-    </div>
+      )}
+
+      <button
+        type="submit"
+        className="btn btn-primary btn-lg"
+        disabled={!isConnected || !nameInput.trim() || isJoining}
+        style={{ justifyContent: 'center' }}
+      >
+        {isJoining ? (
+          <>
+            <span className="spinner" />
+            Joining…
+          </>
+        ) : (
+          <>
+            <Icon
+              name={selectedRole === UserRole.PLAYER ? ICONS.target : ICONS.eye}
+              size={14}
+            />
+            {selectedRole === UserRole.PLAYER ? 'Join as player' : 'Join as viewer'}
+          </>
+        )}
+      </button>
+    </form>
   );
 };
 
